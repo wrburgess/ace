@@ -59,12 +59,15 @@ context you actually re-read (the PR, its checks, its review threads), not on a 
    [`PROJECT.md`](../../PROJECT.md) → *Reviewer* answered — the primary, or which fallback. The SOW
    states this explicitly rather than implying a review happened because findings exist.
 
-   **The reviewed SHA must equal the PR head at delivery — a hard gate, not a note.** Compare the SHA the
-   review actually covered (SOW → *Reviewer Backstop*) against the current PR head. If `listen` committed
-   fixes *after* the Reviewer responded, the delivered diff is **unreviewed**: re-summon the Reviewer on
-   the new head (re-enter [`verify`](../../skills/verify/SKILL.md)'s chain) and produce the SOW only once
-   the reviewed SHA matches what the HC will merge. Durable evidence of a review over a *stale* commit is
-   not evidence of a review over the delivered code.
+   **The reviewed SHA must equal the PR head at delivery — a hard gate, not a note.** Compare the
+   **reviewed SHA** — the head [`verify`](../../skills/verify/SKILL.md) step 4 **captured at summon time**
+   and carried forward unchanged (SOW → *Reviewer Backstop*), **not** a value re-read here — against the
+   current PR head. Re-reading the head at delivery would make the check pass vacuously; the point is that
+   the reviewed SHA is bound to the commit the Reviewer actually saw. If `listen` committed fixes *after*
+   the Reviewer responded, the two differ and the delivered diff is **unreviewed**: re-summon the Reviewer
+   on the new head (re-enter `verify`'s chain) and produce the SOW only once the reviewed SHA matches what
+   the HC will merge. Durable evidence of a review over a *stale* commit is not evidence of a review over
+   the delivered code.
 
    If the chain was exhausted, the floor applies: **`stop-and-ask` is the shipped default and is not
    configurable**, so an unreviewed PR does **not** reach a SOW — stop and ask the HC instead of

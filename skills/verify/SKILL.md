@@ -172,9 +172,18 @@ After posting the self-review, take each chain entry in order:
    than by eye; an empty result is an exhausted chain (step 7).
 3. **Precondition — the *Check* cell is optional and host-supplied.** Declared → run it before
    summoning; unmet means do not summon, fall back immediately. **Absent** → the **summons is the
-   probe**: issue it, and carry the outcome forward as `unreachable (precondition unverified)` rather
-   than as a clean timeout. The baseline ships no executable check, so this is the default path.
-4. **Summon via the declared mechanism** and wait up to the **bounded window**.
+   probe**: issue it, and treat **`precondition unverified`** as a **qualifier** on whatever terminal
+   outcome follows (steps 5–6), not an outcome in itself — a summons that created **no request** is
+   `unreachable (precondition unverified)`; a request created but silent through the window is
+   `timed-out (precondition unverified)`; a reply is `responded`. The baseline ships no executable
+   check, so this is the default path — but it never collapses a *pending* request into a clean
+   `unreachable`.
+4. **Capture the current PR head SHA, then summon** via the declared mechanism, and wait up to the
+   **bounded window**. That captured SHA **is** the **reviewed SHA** — the immutable commit the Reviewer
+   is examining — recorded now, at summon, and carried forward unchanged; it is **never re-derived at
+   delivery**. This is what lets [`final`](../../skills/final/SKILL.md) prove the head the HC merges is
+   the head that was reviewed, not merely re-stamp the current head as "reviewed" (a comparison that
+   would otherwise pass vacuously).
 5. **A response is a reply on _any_ of the three surfaces** — an issue-level PR comment, an **inline
    diff thread**, or a **review body**. Poll all three. Reading only issue-level comments makes an
    automated inline review invisible — the same trap [`listen`](../../skills/listen/SKILL.md) Step 1
@@ -183,8 +192,9 @@ After posting the self-review, take each chain entry in order:
    modes: a summons that created **no review request at all** — the API "succeeded" but produced nothing
    to wait for, or a precondition was unmet — is a **no-op → `unreachable`**, fall back immediately; a
    request that **was created but has not yet replied** is **not** unreachable — keep polling every
-   surface to the bounded-window expiry and record **`timed-out`** (step 6) if none appears. *Request
-   accepted ≠ review produced — but request accepted ≠ unreachable either.*
+   surface to the bounded-window expiry and record **`timed-out`** (step 6), carrying the `precondition
+   unverified` qualifier from step 3 when no Check ran, if none appears. *Request accepted ≠ review
+   produced — but request accepted ≠ unreachable either.*
 6. **Window expires with no response → fall back** to the next entry and repeat from step 1. Never
    wait indefinitely.
 7. **Chain exhausted — including a chain that was unreachable end to end → apply the degradation
@@ -192,10 +202,12 @@ After posting the self-review, take each chain entry in order:
 
 **Carry the outcome forward**, and keep **timeout distinct from unreachable** — "no second model
 exists" and "the second model is slow" call for different HC responses, and the SOW cannot
-reconstruct the difference later. `unreachable (precondition unverified)` is a third, distinct
-outcome: it says the summons went out but nothing confirmed it could land. Record the **durable review
-evidence** — the reviewer's **harness/model**, the **reviewed SHA**, the **disposition** (responded ·
-timed-out · unreachable · floor-hit, and why), and the review **artifact URL** — so
+reconstruct the difference later. `precondition unverified` is a **qualifier** riding on whichever of
+those two applies when no Check ran — it says nothing confirmed the summons could land, and attaches to
+`unreachable` (no request created) or `timed-out` (created but silent) accordingly. Record the **durable
+review evidence** — the reviewer's **harness/model**, the **reviewed SHA** (the summon-time head from
+step 4), the **disposition** (responded · timed-out · unreachable · floor-hit, and why), and the review
+**artifact URL** — so
 [`final`](../../skills/final/SKILL.md) reports it in the SOW from a durable record, never inferring a
 review happened because findings exist.
 

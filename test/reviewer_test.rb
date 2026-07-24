@@ -1817,12 +1817,15 @@ class ReviewerTest < Minitest::Test
                  "an actor outside the declared chain removes nothing"
   end
 
-  def test_independent_chain_returns_the_full_chain_when_the_actor_is_unknown
-    # A nil/blank identity must not GUESS an exclusion: a run that cannot name its own harness keeps the
-    # declared chain rather than silently dropping its head and summoning a shorter chain than authored.
+  def test_independent_chain_fails_closed_when_the_actor_is_unknown
+    # FAIL CLOSED: a nil/blank identity cannot prove independence, so the independent chain is EMPTY and
+    # `verify` hits the `stop-and-ask` floor — never the full chain, which would let a run whose identity
+    # detection broke summon (and self-review as) its own primary (Codex review, PR #140). This reverses
+    # an earlier revision that failed OPEN here; the branch is now load-bearing, not redundant.
     fields = Reviewer.extract(project_md(all_rows))
-    assert_equal %w[Codex Copilot], Reviewer.independent_chain(fields, acting: nil)
-    assert_equal %w[Codex Copilot], Reviewer.independent_chain(fields, acting: "  ")
+    assert_empty Reviewer.independent_chain(fields, acting: nil),
+                 "unknown actor must fail closed to an empty chain, not fall open to the full one"
+    assert_empty Reviewer.independent_chain(fields, acting: "  ")
   end
 
   def test_independent_chain_matches_case_and_emphasis_insensitively
