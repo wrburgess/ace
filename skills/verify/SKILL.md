@@ -178,23 +178,29 @@ After posting the self-review, take each chain entry in order:
    `timed-out (precondition unverified)`; a reply is `responded`. The baseline ships no executable
    check, so this is the default path — but it never collapses a *pending* request into a clean
    `unreachable`.
-4. **Capture the current PR head SHA, then summon** via the declared mechanism, and wait up to the
-   **bounded window**. That captured SHA **is** the **reviewed SHA** — the immutable commit the Reviewer
-   is examining — recorded now, at summon, and carried forward unchanged; it is **never re-derived at
-   delivery**. This is what lets [`final`](../../skills/final/SKILL.md) prove the head the HC merges is
-   the head that was reviewed, not merely re-stamp the current head as "reviewed" (a comparison that
-   would otherwise pass vacuously).
+4. **Snapshot, then summon.** Before issuing the summons capture two things — the **current PR head SHA**
+   and a **baseline of the review threads/comments that already exist** on the PR — then summon via the
+   declared mechanism and wait up to the **bounded window**. The captured SHA **is** the **reviewed
+   SHA** — the immutable commit the Reviewer is examining — recorded now, at summon, carried forward
+   unchanged, and **never re-derived at delivery**; the baseline is what lets step 5 tell *this*
+   summons's response apart from a reply left by an earlier round. Together they let
+   [`final`](../../skills/final/SKILL.md) prove the head the HC merges is the head that was reviewed —
+   not re-stamp the current head as "reviewed" (a comparison that would otherwise pass vacuously), nor
+   accept a stale reply as fresh.
 5. **A response is a reply on _any_ of the three surfaces** — an issue-level PR comment, an **inline
-   diff thread**, or a **review body**. Poll all three. Reading only issue-level comments makes an
-   automated inline review invisible — the same trap [`listen`](../../skills/listen/SKILL.md) Step 1
-   warns about. **A summons that merely returned success is not itself a response** — only a reply on one
-   of the surfaces is. Keep the timeout/unreachable distinction (below) intact by separating two failure
-   modes: a summons that created **no review request at all** — the API "succeeded" but produced nothing
-   to wait for, or a precondition was unmet — is a **no-op → `unreachable`**, fall back immediately; a
-   request that **was created but has not yet replied** is **not** unreachable — keep polling every
-   surface to the bounded-window expiry and record **`timed-out`** (step 6), carrying the `precondition
-   unverified` qualifier from step 3 when no Check ran, if none appears. *Request accepted ≠ review
-   produced — but request accepted ≠ unreachable either.*
+   diff thread**, or a **review body** — and only one that is **new since the summon snapshot (step 4)**:
+   a pre-existing reply from an earlier round is **not** *this* summons's response and must never be
+   counted as one. Poll all three surfaces (reading only issue-level comments makes an automated inline
+   review invisible — the trap [`listen`](../../skills/listen/SKILL.md) Step 1 warns about). For a
+   synchronous reviewer running on the checked-out head (the baseline CLI route) that new reply
+   inherently reviewed the summon-captured SHA; for an asynchronous platform reviewer, attribute the new
+   reply to this summons before accepting it. **A summons that merely returned success is not itself a
+   response.** Keep the timeout/unreachable distinction intact by separating two failure modes: a summons
+   that created **no review request at all** (the API "succeeded" but produced nothing to wait for, or a
+   precondition was unmet) is a **no-op → `unreachable`**, fall back immediately; a request **created but
+   not yet replied** is **not** unreachable — poll to the bounded-window expiry and record **`timed-out`**
+   (step 6), carrying the `precondition unverified` qualifier from step 3 when no Check ran. *Request
+   accepted ≠ review produced — but request accepted ≠ unreachable either.*
 6. **Window expires with no response → fall back** to the next entry and repeat from step 1. Never
    wait indefinitely.
 7. **Chain exhausted — including a chain that was unreachable end to end → apply the degradation

@@ -1663,6 +1663,24 @@ class ReviewerTest < Minitest::Test
     File.join(File.expand_path("..", __dir__), "PROJECT.md")
   end
 
+  def verify_skill_path
+    File.join(File.expand_path("..", __dir__), "skills", "verify", "SKILL.md")
+  end
+
+  def test_absent_check_qualifier_contract_agrees_across_project_md_and_verify
+    # DRIFT GUARD (Codex review, PR #140). The absent-Check classification lives in TWO governing
+    # contracts — PROJECT.md -> Reviewer and skills/verify -> Summon — and they must not disagree about
+    # whether a pending request under an absent Check is `unreachable` or `timed-out`. An earlier revision
+    # aligned verify but left PROJECT.md saying "unreachable ... never as a clean timeout", so an operator
+    # following the project config alone would misreport a pending request. Pin the qualifier phrase in
+    # BOTH so a one-sided revert reddens rather than silently reopening the contradiction.
+    qualifier = "timed-out (precondition unverified)"
+    assert_includes File.read(project_md_path), qualifier,
+                    "PROJECT.md -> Reviewer must carry the created-but-silent qualifier outcome"
+    assert_includes File.read(verify_skill_path), qualifier,
+                    "skills/verify must carry the same qualifier outcome, or the two contracts drift"
+  end
+
   def test_real_project_md_actually_contains_the_section
     # THE PRECONDITION FOR EVERY DRIFT GUARD BELOW. `from_file` fail-safes to DEFAULTS when the
     # section is absent, so deleting the whole `## Reviewer` section - or merely renaming its heading

@@ -163,8 +163,11 @@ decision 4's unconditional model:
 
 - **Declared** → run it *before* summoning; an unmet precondition falls back immediately rather than
   burning the window on a summons nobody receives.
-- **Absent** → **the summons is the probe**, and the outcome is carried forward as
-  `unreachable (precondition unverified)` — never as a clean timeout.
+- **Absent** → **the summons is the probe**, and **`precondition unverified`** rides as a **qualifier**
+  on whatever terminal outcome results — `unreachable (precondition unverified)` when no request was
+  created, `timed-out (precondition unverified)` when a request was created but stayed silent through the
+  window — never collapsing a *pending* request into a clean `unreachable`. (This mirrors
+  [`verify`](skills/verify/SKILL.md)'s summon steps; the two must stay aligned.)
 
 **The baseline ships no executable check**, and the placeholders say so rather than implying one:
 the Codex check needs GitHub App authentication an AC's normal token does not have (it returns
