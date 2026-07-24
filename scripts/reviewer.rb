@@ -457,7 +457,10 @@ module Reviewer
   # review that *appears* to run is worse than none, so the harness a run is executing AS is filtered
   # out of `chain` before any summons. `acting` is the caller's runtime-actual harness identity; a
   # nil/blank identity (a run that cannot name its own harness) returns the chain UNCHANGED rather than
-  # guessing an exclusion that would silently drop the chain's head.
+  # guessing an exclusion that would silently drop the chain's head — and that falls out of the match
+  # rule itself, needing no separate guard: a blank actor normalizes to "", which equals no chain entry
+  # because `chain` already drops the blank/`none` tokens. An explicit early return would be a branch no
+  # test could kill (rules/testing.md:23), so the behavior is left to the reject.
   #
   # MATCHING IS EXACT on the normalized name — emphasis/backticks stripped, trimmed, casefolded, then
   # `==` (via `plain`) — the SAME rule `unsummonable` uses, and for the same reason: a `start_with?`
@@ -471,10 +474,7 @@ module Reviewer
   # harness; `verify` then reads that as an exhausted chain and applies the non-configurable
   # `stop-and-ask` floor, so an empty return must never be mistaken for "reachable".
   def independent_chain(fields, acting:)
-    entries = chain(fields)
-    return entries if acting.to_s.strip.empty?
-
-    entries.reject { |entry| plain(entry) == plain(acting) }
+    chain(fields).reject { |entry| plain(entry) == plain(acting) }
   end
 
   # The fields whose value is outside their allowed set (or malformed), as { key => value }. Empty
