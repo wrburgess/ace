@@ -166,7 +166,10 @@ After posting the self-review, take each chain entry in order:
    This is **self-reported by construction** — you compare the entry against your own runtime-actual
    identity, and nothing verifies that claim. It is also a **harness**-level check, while the
    standard's requirement is *model*-level: it catches a same-harness entry, and does **not** catch
-   two different harnesses that happen to serve the same model.
+   two different harnesses that happen to serve the same model. Derive the chain to summon by passing
+   your runtime-actual harness identity through `scripts/reviewer.rb` →
+   `independent_chain(fields, acting:)`, so the acting harness is dropped **deterministically** rather
+   than by eye; an empty result is an exhausted chain (step 7).
 3. **Precondition — the *Check* cell is optional and host-supplied.** Declared → run it before
    summoning; unmet means do not summon, fall back immediately. **Absent** → the **summons is the
    probe**: issue it, and carry the outcome forward as `unreachable (precondition unverified)` rather
@@ -175,7 +178,9 @@ After posting the self-review, take each chain entry in order:
 5. **A response is a reply on _any_ of the three surfaces** — an issue-level PR comment, an **inline
    diff thread**, or a **review body**. Poll all three. Reading only issue-level comments makes an
    automated inline review invisible — the same trap [`listen`](../../skills/listen/SKILL.md) Step 1
-   warns about.
+   warns about. **A request that produced no reply on any surface is not a response**: a summons whose
+   API call returned success but created no review artifact is a no-op — carry it as
+   `unreachable`/failed and fall back (step 6), never as a completed review.
 6. **Window expires with no response → fall back** to the next entry and repeat from step 1. Never
    wait indefinitely.
 7. **Chain exhausted — including a chain that was unreachable end to end → apply the degradation
@@ -184,9 +189,11 @@ After posting the self-review, take each chain entry in order:
 **Carry the outcome forward**, and keep **timeout distinct from unreachable** — "no second model
 exists" and "the second model is slow" call for different HC responses, and the SOW cannot
 reconstruct the difference later. `unreachable (precondition unverified)` is a third, distinct
-outcome: it says the summons went out but nothing confirmed it could land. Record which reviewer
-answered, or which floor was hit and why;
-[`final`](../../skills/final/SKILL.md) reports it in the SOW.
+outcome: it says the summons went out but nothing confirmed it could land. Record the **durable review
+evidence** — the reviewer's **harness/model**, the **reviewed SHA**, the **disposition** (responded ·
+timed-out · unreachable · floor-hit, and why), and the review **artifact URL** — so
+[`final`](../../skills/final/SKILL.md) reports it in the SOW from a durable record, never inferring a
+review happened because findings exist.
 
 **Terminal artifact:** the self-review comment on the PR.
 

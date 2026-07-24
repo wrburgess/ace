@@ -119,6 +119,15 @@ and stays green.
   independent review must not be able to certify itself. The AC stops and asks the HC — it never
   delivers unreviewed with a footnote ([ADR 0026](docs/adr/0026-reviewer-is-a-project-config-value-ac-summons-floor-preserved.md)
   decision 3, affirming [ADR 0005](docs/adr/0005-ship-hybrid-delegation-offload-retrieval-protect-judgment.md)).
+- **The acting harness is excluded from the chain before any summons.** An AC is never its own
+  independent backstop — a same-model review that *appears* to run is worse than none — so the harness a
+  run is executing *as* is filtered out of *Primary* + *Fallback order* before the window opens
+  (`scripts/reviewer.rb` → `independent_chain`, the runtime sibling of the static
+  fallback-names-the-primary invariant). It is a **harness-level** guard: it catches a same-harness
+  reviewer and, like the invariant it mirrors, does **not** catch two harnesses serving the same model
+  ([ADR 0027](docs/adr/0027-reviewer-chain-validated-against-invocation-paths.md) decision 7 records why
+  the rest is unverifiable from a static declaration). If the exclusion empties the chain, the run is at
+  the exhausted-chain floor — `stop-and-ask`.
 - **At the PR gate, the AC summons the Reviewer, not the HC**, and [`verify`](skills/verify/SKILL.md)
   is the **sole owner** of that summons. No other Skill issues it — a duplicated summons produces two
   review requests and two windows, and makes "did the primary respond?" unanswerable.
@@ -131,7 +140,9 @@ and stays green.
   decision 2 records it as deliberately unsettled.
 - **A response** is a reply on **any** of the three surfaces — an issue-level PR comment, an **inline
   diff thread**, or a **review body**. Reading only the first makes an automated inline review
-  invisible.
+  invisible. **A summons that creates no such reply is not a response** — a request whose API call
+  "succeeded" but produced no review artifact is carried as `unreachable`/failed and advances the chain
+  (or reaches the floor), never recorded as a completed review. *Request accepted ≠ review produced.*
 - **Timeout and unreachable are distinct outcomes**, carried forward separately: "no second model
   exists" and "the second model is slow" call for different HC responses, and collapsing them loses
   information the SOW cannot reconstruct.

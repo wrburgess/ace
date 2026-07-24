@@ -1791,4 +1791,64 @@ class ReviewerTest < Minitest::Test
     assert_equal Reviewer::FLOOR_VALUE, fields[:degradation_floor],
                  "the shipped PROJECT.md must declare the non-configurable degradation floor"
   end
+
+  # --- independent_chain: the ACTING harness is excluded (issue #139 / ADR 0032) -----------------
+  #
+  # The RUNTIME independence seam. `chain` is what the file DECLARES; `independent_chain` is what an AC
+  # running AS one of those harnesses may actually summon — itself removed, because an AC is never its
+  # own independent backstop. The static `fallback_order_self_reference` invariant catches a file that
+  # names its primary as a fallback; this catches the run whose ACTOR is a chain entry.
+
+  def test_independent_chain_drops_the_acting_primary_and_promotes_the_fallback
+    fields = Reviewer.extract(project_md(all_rows)) # Codex primary, Copilot fallback
+    assert_equal %w[Copilot], Reviewer.independent_chain(fields, acting: "Codex"),
+                 "a Codex AC must not summon Codex; the fallback becomes the whole independent chain"
+  end
+
+  def test_independent_chain_drops_an_acting_fallback_entry_keeping_order
+    fields = Reviewer.extract(project_md(all_rows(fallback: "Copilot, Gemini")))
+    assert_equal %w[Codex Gemini], Reviewer.independent_chain(fields, acting: "Copilot"),
+                 "only the acting entry is removed; the rest keep their declared order"
+  end
+
+  def test_independent_chain_is_unchanged_when_the_actor_is_not_in_the_chain
+    fields = Reviewer.extract(project_md(all_rows)) # Codex, Copilot
+    assert_equal %w[Codex Copilot], Reviewer.independent_chain(fields, acting: "Antigravity"),
+                 "an actor outside the declared chain removes nothing"
+  end
+
+  def test_independent_chain_returns_the_full_chain_when_the_actor_is_unknown
+    # A nil/blank identity must not GUESS an exclusion: a run that cannot name its own harness keeps the
+    # declared chain rather than silently dropping its head and summoning a shorter chain than authored.
+    fields = Reviewer.extract(project_md(all_rows))
+    assert_equal %w[Codex Copilot], Reviewer.independent_chain(fields, acting: nil)
+    assert_equal %w[Codex Copilot], Reviewer.independent_chain(fields, acting: "  ")
+  end
+
+  def test_independent_chain_matches_case_and_emphasis_insensitively
+    # The actor identity is self-reported free text; it must match the declared entry through the same
+    # normalization every other seam uses (`plain`), or a `**codex**` actor would slip past a `Codex`
+    # primary and review its own work.
+    fields = Reviewer.extract(project_md(all_rows))
+    assert_equal %w[Copilot], Reviewer.independent_chain(fields, acting: "**CODEX**")
+  end
+
+  def test_independent_chain_is_harness_level_a_model_qualified_actor_does_not_match
+    # THE HONEST LIMITATION, pinned exactly as `unsummonable`'s model-qualified cases pin theirs. A
+    # `Codex (GPT-5)` actor does NOT match the bare `Codex` entry, so the entry is NOT dropped — this is
+    # a HARNESS-level guard (ADR 0027 decision 7); the model-level requirement is unverifiable from the
+    # static declaration. If this ever starts dropping the entry, the matching rule was widened past
+    # harness identity — make sure that was intended, and align `unsummonable`/`self_reference` too.
+    fields = Reviewer.extract(project_md(all_rows))
+    assert_equal %w[Codex Copilot], Reviewer.independent_chain(fields, acting: "Codex (GPT-5)"),
+                 "a model-qualified actor does not resolve to the bare harness entry — harness-level only"
+  end
+
+  def test_independent_chain_can_empty_the_whole_chain
+    # When the ONLY entry is the acting harness, the independent chain is empty — which `verify` reads
+    # as an exhausted chain and answers with the non-configurable `stop-and-ask` floor. Pinned so an
+    # empty result can never be mistaken for "reachable" downstream.
+    fields = Reviewer.extract(project_md(all_rows(fallback: "none"))) # Codex only
+    assert_empty Reviewer.independent_chain(fields, acting: "Codex")
+  end
 end

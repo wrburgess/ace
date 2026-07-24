@@ -90,7 +90,10 @@ context you actually re-read (the PR, its checks, its review threads), not on a 
    - Results: [each check from PROJECT.md → Quality Checks and its outcome]
 
    ### Reviewer Backstop
-   - Reviewed by: [which reviewer answered — the primary, or which fallback and why it was reached]
+   - Reviewer (harness / model): [which reviewer answered — the primary, or which fallback and why it was reached]
+   - Reviewed SHA: [the commit the review actually covered]
+   - Disposition: [responded · timed-out · unreachable · floor-hit — and why]
+   - Review artifact: [URL of the review comment / thread / body — or "none (floor: stop-and-ask)"]
 
    ### Reviewer Findings
    | Finding | Severity | Resolution |
