@@ -178,15 +178,22 @@ After posting the self-review, take each chain entry in order:
    `timed-out (precondition unverified)`; a reply is `responded`. The baseline ships no executable
    check, so this is the default path — but it never collapses a *pending* request into a clean
    `unreachable`.
-4. **Snapshot, then summon.** Before issuing the summons capture two things — the **current PR head SHA**
-   and a **baseline of the review threads/comments that already exist** on the PR — then summon via the
-   declared mechanism and wait up to the **bounded window**. The captured SHA **is** the **reviewed
-   SHA** — the immutable commit the Reviewer is examining — recorded now, at summon, carried forward
-   unchanged, and **never re-derived at delivery**; the baseline is what lets step 5 tell *this*
-   summons's response apart from a reply left by an earlier round. Together they let
-   [`final`](../../skills/final/SKILL.md) prove the head the HC merges is the head that was reviewed —
-   not re-stamp the current head as "reviewed" (a comparison that would otherwise pass vacuously), nor
-   accept a stale reply as fresh.
+4. **Snapshot, then summon.** Before issuing the summons capture the **current PR head SHA** and a
+   **baseline of the review threads/comments that already exist** on the PR; then summon via the declared
+   mechanism and wait up to the **bounded window**. **How the reviewed SHA binds depends on the
+   mechanism:**
+   - **Synchronous** reviewer that reviews the checked-out head (the baseline CLI route) → the
+     summon-captured SHA **is** the reviewed SHA, bound by construction.
+   - **Asynchronous** reviewer that fetches the PR later (a platform review) → the head may advance
+     before it fetches, so the summon-captured SHA is only a *lower bound*. Take the reviewed SHA from the
+     **review artifact itself** (the commit the platform records the review against); if the artifact pins
+     no commit, the review is **unverified → apply the floor (step 7)**, never assumed to cover the
+     summon-time head.
+
+   Record the reviewed SHA now, carry it forward unchanged, and **never re-derive it at delivery**; the
+   baseline lets step 5 tell *this* summons's response from an earlier round's. Together these let
+   [`final`](../../skills/final/SKILL.md) prove the head the HC merges is the head that was **actually
+   reviewed** — not a vacuous re-stamp of the current head, nor a stale reply accepted as fresh.
 5. **A response is a reply on _any_ of the three surfaces** — an issue-level PR comment, an **inline
    diff thread**, or a **review body** — and only one that is **new since the summon snapshot (step 4)**:
    a pre-existing reply from an earlier round is **not** *this* summons's response and must never be
@@ -194,7 +201,8 @@ After posting the self-review, take each chain entry in order:
    review invisible — the trap [`listen`](../../skills/listen/SKILL.md) Step 1 warns about). For a
    synchronous reviewer running on the checked-out head (the baseline CLI route) that new reply
    inherently reviewed the summon-captured SHA; for an asynchronous platform reviewer, attribute the new
-   reply to this summons before accepting it. **A summons that merely returned success is not itself a
+   reply to this summons **and take its reviewed SHA from the artifact, not the summon-time head**
+   (step 4). **A summons that merely returned success is not itself a
    response.** Keep the timeout/unreachable distinction intact by separating two failure modes: a summons
    that created **no review request at all** (the API "succeeded" but produced nothing to wait for, or a
    precondition was unmet) is a **no-op → `unreachable`**, fall back immediately; a request **created but

@@ -60,9 +60,10 @@ context you actually re-read (the PR, its checks, its review threads), not on a 
    states this explicitly rather than implying a review happened because findings exist.
 
    **The reviewed SHA must equal the PR head at delivery — a hard gate, not a note.** Compare the
-   **reviewed SHA** — the head [`verify`](../../skills/verify/SKILL.md) step 4 **captured at summon time**
-   and carried forward unchanged (SOW → *Reviewer Backstop*), **not** a value re-read here — against the
-   current PR head. Re-reading the head at delivery would make the check pass vacuously; the point is that
+   **reviewed SHA** — bound by [`verify`](../../skills/verify/SKILL.md) step 4 (the summon-captured head
+   for a synchronous reviewer, or the artifact-reported commit for an asynchronous one) and carried
+   forward unchanged (SOW → *Reviewer Backstop*), **not** a value re-read here — against the current PR
+   head. Re-reading the head at delivery would make the check pass vacuously; the point is that
    the reviewed SHA is bound to the commit the Reviewer actually saw. If `listen` committed fixes *after*
    the Reviewer responded, the two differ and the delivered diff is **unreviewed**: re-summon the Reviewer
    on the new head (re-enter `verify`'s chain) and produce the SOW only once the reviewed SHA matches what
