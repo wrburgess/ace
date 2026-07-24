@@ -140,9 +140,11 @@ and stays green.
   decision 2 records it as deliberately unsettled.
 - **A response** is a reply on **any** of the three surfaces — an issue-level PR comment, an **inline
   diff thread**, or a **review body**. Reading only the first makes an automated inline review
-  invisible. **A summons that creates no such reply is not a response** — a request whose API call
-  "succeeded" but produced no review artifact is carried as `unreachable`/failed and advances the chain
-  (or reaches the floor), never recorded as a completed review. *Request accepted ≠ review produced.*
+  invisible. **A summons that merely returned success is not a response** — only a reply on one of the
+  three surfaces is. A summons that created **no review request** (the API "succeeded" but produced
+  nothing to wait for) is a no-op → `unreachable`; a request that was created but has **not replied yet**
+  is polled to the bounded-window expiry and recorded as `timed-out` if it stays silent — the two remain
+  distinct. *Request accepted ≠ review produced.*
 - **Timeout and unreachable are distinct outcomes**, carried forward separately: "no second model
   exists" and "the second model is slow" call for different HC responses, and collapsing them loses
   information the SOW cannot reconstruct.

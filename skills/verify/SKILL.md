@@ -178,9 +178,13 @@ After posting the self-review, take each chain entry in order:
 5. **A response is a reply on _any_ of the three surfaces** — an issue-level PR comment, an **inline
    diff thread**, or a **review body**. Poll all three. Reading only issue-level comments makes an
    automated inline review invisible — the same trap [`listen`](../../skills/listen/SKILL.md) Step 1
-   warns about. **A request that produced no reply on any surface is not a response**: a summons whose
-   API call returned success but created no review artifact is a no-op — carry it as
-   `unreachable`/failed and fall back (step 6), never as a completed review.
+   warns about. **A summons that merely returned success is not itself a response** — only a reply on one
+   of the surfaces is. Keep the timeout/unreachable distinction (below) intact by separating two failure
+   modes: a summons that created **no review request at all** — the API "succeeded" but produced nothing
+   to wait for, or a precondition was unmet — is a **no-op → `unreachable`**, fall back immediately; a
+   request that **was created but has not yet replied** is **not** unreachable — keep polling every
+   surface to the bounded-window expiry and record **`timed-out`** (step 6) if none appears. *Request
+   accepted ≠ review produced — but request accepted ≠ unreachable either.*
 6. **Window expires with no response → fall back** to the next entry and repeat from step 1. Never
    wait indefinitely.
 7. **Chain exhausted — including a chain that was unreachable end to end → apply the degradation
