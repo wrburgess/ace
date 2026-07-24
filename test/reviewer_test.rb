@@ -1663,6 +1663,24 @@ class ReviewerTest < Minitest::Test
     File.join(File.expand_path("..", __dir__), "PROJECT.md")
   end
 
+  def verify_skill_path
+    File.join(File.expand_path("..", __dir__), "skills", "verify", "SKILL.md")
+  end
+
+  def test_absent_check_qualifier_contract_agrees_across_project_md_and_verify
+    # DRIFT GUARD (Codex review, PR #140). The absent-Check classification lives in TWO governing
+    # contracts — PROJECT.md -> Reviewer and skills/verify -> Summon — and they must not disagree about
+    # whether a pending request under an absent Check is `unreachable` or `timed-out`. An earlier revision
+    # aligned verify but left PROJECT.md saying "unreachable ... never as a clean timeout", so an operator
+    # following the project config alone would misreport a pending request. Pin the qualifier phrase in
+    # BOTH so a one-sided revert reddens rather than silently reopening the contradiction.
+    qualifier = "timed-out (precondition unverified)"
+    assert_includes File.read(project_md_path), qualifier,
+                    "PROJECT.md -> Reviewer must carry the created-but-silent qualifier outcome"
+    assert_includes File.read(verify_skill_path), qualifier,
+                    "skills/verify must carry the same qualifier outcome, or the two contracts drift"
+  end
+
   def test_real_project_md_actually_contains_the_section
     # THE PRECONDITION FOR EVERY DRIFT GUARD BELOW. `from_file` fail-safes to DEFAULTS when the
     # section is absent, so deleting the whole `## Reviewer` section - or merely renaming its heading
@@ -1790,5 +1808,68 @@ class ReviewerTest < Minitest::Test
     fields = Reviewer.from_file(project_md_path)
     assert_equal Reviewer::FLOOR_VALUE, fields[:degradation_floor],
                  "the shipped PROJECT.md must declare the non-configurable degradation floor"
+  end
+
+  # --- independent_chain: the ACTING harness is excluded (issue #139 / ADR 0032) -----------------
+  #
+  # The RUNTIME independence seam. `chain` is what the file DECLARES; `independent_chain` is what an AC
+  # running AS one of those harnesses may actually summon — itself removed, because an AC is never its
+  # own independent backstop. The static `fallback_order_self_reference` invariant catches a file that
+  # names its primary as a fallback; this catches the run whose ACTOR is a chain entry.
+
+  def test_independent_chain_drops_the_acting_primary_and_promotes_the_fallback
+    fields = Reviewer.extract(project_md(all_rows)) # Codex primary, Copilot fallback
+    assert_equal %w[Copilot], Reviewer.independent_chain(fields, acting: "Codex"),
+                 "a Codex AC must not summon Codex; the fallback becomes the whole independent chain"
+  end
+
+  def test_independent_chain_drops_an_acting_fallback_entry_keeping_order
+    fields = Reviewer.extract(project_md(all_rows(fallback: "Copilot, Gemini")))
+    assert_equal %w[Codex Gemini], Reviewer.independent_chain(fields, acting: "Copilot"),
+                 "only the acting entry is removed; the rest keep their declared order"
+  end
+
+  def test_independent_chain_is_unchanged_when_the_actor_is_not_in_the_chain
+    fields = Reviewer.extract(project_md(all_rows)) # Codex, Copilot
+    assert_equal %w[Codex Copilot], Reviewer.independent_chain(fields, acting: "Antigravity"),
+                 "an actor outside the declared chain removes nothing"
+  end
+
+  def test_independent_chain_fails_closed_when_the_actor_is_unknown
+    # FAIL CLOSED: a nil/blank identity cannot prove independence, so the independent chain is EMPTY and
+    # `verify` hits the `stop-and-ask` floor — never the full chain, which would let a run whose identity
+    # detection broke summon (and self-review as) its own primary (Codex review, PR #140). This reverses
+    # an earlier revision that failed OPEN here; the branch is now load-bearing, not redundant.
+    fields = Reviewer.extract(project_md(all_rows))
+    assert_empty Reviewer.independent_chain(fields, acting: nil),
+                 "unknown actor must fail closed to an empty chain, not fall open to the full one"
+    assert_empty Reviewer.independent_chain(fields, acting: "  ")
+  end
+
+  def test_independent_chain_matches_case_and_emphasis_insensitively
+    # The actor identity is self-reported free text; it must match the declared entry through the same
+    # normalization every other seam uses (`plain`), or a `**codex**` actor would slip past a `Codex`
+    # primary and review its own work.
+    fields = Reviewer.extract(project_md(all_rows))
+    assert_equal %w[Copilot], Reviewer.independent_chain(fields, acting: "**CODEX**")
+  end
+
+  def test_independent_chain_is_harness_level_a_model_qualified_actor_does_not_match
+    # THE HONEST LIMITATION, pinned exactly as `unsummonable`'s model-qualified cases pin theirs. A
+    # `Codex (GPT-5)` actor does NOT match the bare `Codex` entry, so the entry is NOT dropped — this is
+    # a HARNESS-level guard (ADR 0027 decision 7); the model-level requirement is unverifiable from the
+    # static declaration. If this ever starts dropping the entry, the matching rule was widened past
+    # harness identity — make sure that was intended, and align `unsummonable`/`self_reference` too.
+    fields = Reviewer.extract(project_md(all_rows))
+    assert_equal %w[Codex Copilot], Reviewer.independent_chain(fields, acting: "Codex (GPT-5)"),
+                 "a model-qualified actor does not resolve to the bare harness entry — harness-level only"
+  end
+
+  def test_independent_chain_can_empty_the_whole_chain
+    # When the ONLY entry is the acting harness, the independent chain is empty — which `verify` reads
+    # as an exhausted chain and answers with the non-configurable `stop-and-ask` floor. Pinned so an
+    # empty result can never be mistaken for "reachable" downstream.
+    fields = Reviewer.extract(project_md(all_rows(fallback: "none"))) # Codex only
+    assert_empty Reviewer.independent_chain(fields, acting: "Codex")
   end
 end

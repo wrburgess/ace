@@ -166,16 +166,49 @@ After posting the self-review, take each chain entry in order:
    This is **self-reported by construction** — you compare the entry against your own runtime-actual
    identity, and nothing verifies that claim. It is also a **harness**-level check, while the
    standard's requirement is *model*-level: it catches a same-harness entry, and does **not** catch
-   two different harnesses that happen to serve the same model.
+   two different harnesses that happen to serve the same model. Derive the chain to summon by passing
+   your runtime-actual harness identity through `scripts/reviewer.rb` →
+   `independent_chain(fields, acting:)`, so the acting harness is dropped **deterministically** rather
+   than by eye; an empty result is an exhausted chain (step 7).
 3. **Precondition — the *Check* cell is optional and host-supplied.** Declared → run it before
    summoning; unmet means do not summon, fall back immediately. **Absent** → the **summons is the
-   probe**: issue it, and carry the outcome forward as `unreachable (precondition unverified)` rather
-   than as a clean timeout. The baseline ships no executable check, so this is the default path.
-4. **Summon via the declared mechanism** and wait up to the **bounded window**.
+   probe**: issue it, and treat **`precondition unverified`** as a **qualifier** on whatever terminal
+   outcome follows (steps 5–6), not an outcome in itself — a summons that created **no request** is
+   `unreachable (precondition unverified)`; a request created but silent through the window is
+   `timed-out (precondition unverified)`; a reply is `responded`. The baseline ships no executable
+   check, so this is the default path — but it never collapses a *pending* request into a clean
+   `unreachable`.
+4. **Snapshot, then summon.** Before issuing the summons capture the **current PR head SHA** and a
+   **baseline of the review threads/comments that already exist** on the PR; then summon via the declared
+   mechanism and wait up to the **bounded window**. **How the reviewed SHA binds depends on the
+   mechanism:**
+   - **Synchronous** reviewer that reviews the checked-out head (the baseline CLI route) → the
+     summon-captured SHA **is** the reviewed SHA, bound by construction.
+   - **Asynchronous** reviewer that fetches the PR later (a platform review) → the head may advance
+     before it fetches, so the summon-captured SHA is only a *lower bound*. Take the reviewed SHA from the
+     **review artifact itself** (the commit the platform records the review against); if the artifact pins
+     no commit, the review is **unverified → apply the floor (step 7)**, never assumed to cover the
+     summon-time head.
+
+   Record the reviewed SHA now, carry it forward unchanged, and **never re-derive it at delivery**; the
+   baseline lets step 5 tell *this* summons's response from an earlier round's. Together these let
+   [`final`](../../skills/final/SKILL.md) prove the head the HC merges is the head that was **actually
+   reviewed** — not a vacuous re-stamp of the current head, nor a stale reply accepted as fresh.
 5. **A response is a reply on _any_ of the three surfaces** — an issue-level PR comment, an **inline
-   diff thread**, or a **review body**. Poll all three. Reading only issue-level comments makes an
-   automated inline review invisible — the same trap [`listen`](../../skills/listen/SKILL.md) Step 1
-   warns about.
+   diff thread**, or a **review body** — and only one that is **new since the summon snapshot (step 4)**:
+   a pre-existing reply from an earlier round is **not** *this* summons's response and must never be
+   counted as one. Poll all three surfaces (reading only issue-level comments makes an automated inline
+   review invisible — the trap [`listen`](../../skills/listen/SKILL.md) Step 1 warns about). For a
+   synchronous reviewer running on the checked-out head (the baseline CLI route) that new reply
+   inherently reviewed the summon-captured SHA; for an asynchronous platform reviewer, attribute the new
+   reply to this summons **and take its reviewed SHA from the artifact, not the summon-time head**
+   (step 4). **A summons that merely returned success is not itself a
+   response.** Keep the timeout/unreachable distinction intact by separating two failure modes: a summons
+   that created **no review request at all** (the API "succeeded" but produced nothing to wait for, or a
+   precondition was unmet) is a **no-op → `unreachable`**, fall back immediately; a request **created but
+   not yet replied** is **not** unreachable — poll to the bounded-window expiry and record **`timed-out`**
+   (step 6), carrying the `precondition unverified` qualifier from step 3 when no Check ran. *Request
+   accepted ≠ review produced — but request accepted ≠ unreachable either.*
 6. **Window expires with no response → fall back** to the next entry and repeat from step 1. Never
    wait indefinitely.
 7. **Chain exhausted — including a chain that was unreachable end to end → apply the degradation
@@ -183,10 +216,14 @@ After posting the self-review, take each chain entry in order:
 
 **Carry the outcome forward**, and keep **timeout distinct from unreachable** — "no second model
 exists" and "the second model is slow" call for different HC responses, and the SOW cannot
-reconstruct the difference later. `unreachable (precondition unverified)` is a third, distinct
-outcome: it says the summons went out but nothing confirmed it could land. Record which reviewer
-answered, or which floor was hit and why;
-[`final`](../../skills/final/SKILL.md) reports it in the SOW.
+reconstruct the difference later. `precondition unverified` is a **qualifier** riding on whichever of
+those two applies when no Check ran — it says nothing confirmed the summons could land, and attaches to
+`unreachable` (no request created) or `timed-out` (created but silent) accordingly. Record the **durable
+review evidence** — the reviewer's **harness/model**, the **reviewed SHA** (the summon-time head from
+step 4), the **disposition** (responded · timed-out · unreachable · floor-hit, and why), and the review
+**artifact URL** — so
+[`final`](../../skills/final/SKILL.md) reports it in the SOW from a durable record, never inferring a
+review happened because findings exist.
 
 **Terminal artifact:** the self-review comment on the PR.
 

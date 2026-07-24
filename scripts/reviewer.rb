@@ -452,6 +452,38 @@ module Reviewer
     entries.concat(fallback_entries(fields[:fallback_order]))
   end
 
+  # The reviewer chain with the ACTING harness removed — the independent-review chain an AC may
+  # actually summon (issue #139 / ADR 0032). An AC is never its own independent backstop: a same-model
+  # review that *appears* to run is worse than none, so the harness a run is executing AS is filtered
+  # out of `chain` before any summons. `acting` is the caller's runtime-actual harness identity.
+  #
+  # FAIL CLOSED on an UNKNOWN actor. A nil/blank identity — a run that cannot name the harness it is
+  # executing AS — returns an EMPTY chain, not the full one: if the actor is unknown, independence from
+  # it cannot be proven, so no entry may be summoned as an independent backstop. `verify` reads the empty
+  # result as an exhausted chain and applies the non-configurable `stop-and-ask` floor, exactly as the
+  # floor treats "cannot obtain an independent review". Returning the full chain here would fail OPEN — a
+  # run whose identity detection broke could summon its own primary and self-review (Codex review,
+  # PR #140). This empty-actor branch is load-bearing and test-pinned, NOT the redundant guard an earlier
+  # revision removed: there a blank actor matched no entry and changed nothing; here it changes the
+  # result from the full chain to none.
+  #
+  # MATCHING IS EXACT on the normalized name — emphasis/backticks stripped, trimmed, casefolded, then
+  # `==` (via `plain`) — the SAME rule `unsummonable` uses, and for the same reason: a `start_with?`
+  # rule would let a lone `Codex` actor drop a distinct `Codex Cloud` entry, or miss it entirely.
+  #
+  # This is the RUNTIME sibling of `invalid`'s `fallback_order_self_reference` invariant (a file that
+  # names its primary as a fallback) and shares that invariant's honest limitation: it is
+  # HARNESS-level, so a model-qualified restatement of the same harness (`Codex (GPT-5)` acting against
+  # a bare `Codex` entry) escapes it — ADR 0027 decision 7 records why the model-level requirement is
+  # unverifiable from a static declaration. An EMPTY result means the whole chain was the acting
+  # harness; `verify` then reads that as an exhausted chain and applies the non-configurable
+  # `stop-and-ask` floor, so an empty return must never be mistaken for "reachable".
+  def independent_chain(fields, acting:)
+    return [] if acting.to_s.strip.empty?
+
+    chain(fields).reject { |entry| plain(entry) == plain(acting) }
+  end
+
   # The fields whose value is outside their allowed set (or malformed), as { key => value }. Empty
   # when all are valid. Separated from `extract` so an unknown value is REPORTED rather than coerced.
   #

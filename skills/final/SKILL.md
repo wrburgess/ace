@@ -59,6 +59,17 @@ context you actually re-read (the PR, its checks, its review threads), not on a 
    [`PROJECT.md`](../../PROJECT.md) → *Reviewer* answered — the primary, or which fallback. The SOW
    states this explicitly rather than implying a review happened because findings exist.
 
+   **The reviewed SHA must equal the PR head at delivery — a hard gate, not a note.** Compare the
+   **reviewed SHA** — bound by [`verify`](../../skills/verify/SKILL.md) step 4 (the summon-captured head
+   for a synchronous reviewer, or the artifact-reported commit for an asynchronous one) and carried
+   forward unchanged (SOW → *Reviewer Backstop*), **not** a value re-read here — against the current PR
+   head. Re-reading the head at delivery would make the check pass vacuously; the point is that
+   the reviewed SHA is bound to the commit the Reviewer actually saw. If `listen` committed fixes *after*
+   the Reviewer responded, the two differ and the delivered diff is **unreviewed**: re-summon the Reviewer
+   on the new head (re-enter `verify`'s chain) and produce the SOW only once the reviewed SHA matches what
+   the HC will merge. Durable evidence of a review over a *stale* commit is not evidence of a review over
+   the delivered code.
+
    If the chain was exhausted, the floor applies: **`stop-and-ask` is the shipped default and is not
    configurable**, so an unreviewed PR does **not** reach a SOW — stop and ask the HC instead of
    delivering with a footnote. Reaching this step with no reviewer response means `verify`'s floor was
@@ -90,7 +101,10 @@ context you actually re-read (the PR, its checks, its review threads), not on a 
    - Results: [each check from PROJECT.md → Quality Checks and its outcome]
 
    ### Reviewer Backstop
-   - Reviewed by: [which reviewer answered — the primary, or which fallback and why it was reached]
+   - Reviewer (harness / model): [which reviewer answered — the primary, or which fallback and why it was reached]
+   - Reviewed SHA: [the commit the review actually covered]
+   - Disposition: [responded · timed-out · unreachable · floor-hit — and why]
+   - Review artifact: [URL of the review comment / thread / body — or "none (floor: stop-and-ask)"]
 
    ### Reviewer Findings
    | Finding | Severity | Resolution |
