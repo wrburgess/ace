@@ -54,7 +54,7 @@ unquoted `": "` inside a prose `description:` — the single most likely authori
 descriptions are prose and prose contains colons — passed the gate and shipped a Skill that was
 silently undiscoverable in every consuming tool. A regex proves the text *looks* parseable; every
 consumer needs it to *be* parseable, and the whole defect lives in that gap
-(issue [#103](https://github.com/wrburgess/ai-config/issues/103)).
+(issue [#103](https://github.com/wrburgess/ace/issues/103)).
 
 Three things the parse-based version had to get right, each of which is easy to get wrong:
 

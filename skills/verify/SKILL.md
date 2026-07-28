@@ -138,7 +138,7 @@ the loop. No other Skill issues this summons: a second one produces two review r
 and an unanswerable "did the primary respond?". (The *plan*-gate summons is a separate thing: it stays
 with the HC where plan approval is `required`, but under the shipped baseline `auto` nobody is at the
 plan gate, so it has no owner yet — a residual risk tracked in
-[#129](https://github.com/wrburgess/ai-config/issues/129); see the ADR.)
+[#129](https://github.com/wrburgess/ace/issues/129); see the ADR.)
 
 Read the chain from [`PROJECT.md`](../../PROJECT.md) → *Reviewer*: the **primary**, the **fallback
 order**, the **bounded window**, and the **degradation floor**. **Baseline — primary `Codex`,

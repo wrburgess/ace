@@ -39,7 +39,7 @@ over time is which gates require external review vs. self-review; what changes a
   **At the plan gate the HC forwards** the assessment and plan (Stages 1–2 below) **when plan approval
   is `required`** — a human is already at that gate. Under the shipped baseline `auto` nobody is there,
   so the plan-gate summons has no owner yet — a residual risk tracked in
-  [#129](https://github.com/wrburgess/ai-config/issues/129)
+  [#129](https://github.com/wrburgess/ace/issues/129)
   ([ADR 0029](../adr/0029-baseline-ships-ungated-to-merge.md)).
 
 ## The lifecycle host

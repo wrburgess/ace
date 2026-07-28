@@ -53,7 +53,7 @@ target file exists.** A contributor who "helpfully" converts a backticked path i
 target lands will break the parity gate.
 
 **The carve-out: a target the bundle does not vendor stays backticked permanently.** "Once the target
-exists" is the right test only for files that ship. `ai-config-sync` does **not** vendor `README.md` or
+exists" is the right test only for files that ship. `ace-sync` does **not** vendor `README.md` or
 anything under `test/` — a Host App owns its own README and has no copy of the bundle's self-tests — so
 a markdown link to either resolves *here* and is **dead in every vendored copy**. That failure is
 invisible in this repo and reddens the host's parity check on day one; it is caught only by

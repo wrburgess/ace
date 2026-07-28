@@ -1,8 +1,8 @@
-# ai-config is a Config Bundle repo, not a Rails app — it builds nothing. Ignore only
+# ace is a Config Bundle repo, not a Rails app — it builds nothing. Ignore only
 # tool-local (non-shared) settings and OS/editor cruft, never Rails build artifacts.
 
 # Tool-local, non-shared agent settings — never committed, never vendored
-# (bin/ai-config-sync excludes the same *.local files when copying the bundle into a Host App).
+# (bin/ace-sync excludes the same *.local files when copying the bundle into a Host App).
 *.local
 .claude/settings.local.json
 .claude/*.local.json

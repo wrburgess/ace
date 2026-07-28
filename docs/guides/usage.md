@@ -14,23 +14,23 @@ lifecycle from any of the five configured agents (Claude, Codex, Copilot, Antigr
 ## 1. Vendor the baseline in
 
 Copy the baseline into your Host App — distributed by **copying files in**, no submodule/package/upstream
-tracking ([ADR 0001](../adr/0001-distribute-as-copy-in-sync-script.md)). The `ai-config-sync`
+tracking ([ADR 0001](../adr/0001-distribute-as-copy-in-sync-script.md)). The `ace-sync`
 script is never vendored into a Host App, so these commands always run **from a clone of the
-ai-config bundle repo** (if you are reading a vendored copy of this guide inside a Host App, that
-means your upstream ai-config clone, not this repo):
+ace bundle repo** (if you are reading a vendored copy of this guide inside a Host App, that
+means your upstream ace clone, not this repo):
 
 ```bash
 # Preview what would be copied (writes nothing):
-ruby bin/ai-config-sync --dry-run /path/to/host-app
+ruby bin/ace-sync --dry-run /path/to/host-app
 
 # Vendor the bundle in:
-ruby bin/ai-config-sync /path/to/host-app
+ruby bin/ace-sync /path/to/host-app
 ```
 
 - The Host App owns **plain files** at their expected paths (real files, never symlinks).
 - Copies each top-level surface **only if it exists**, so it behaves the same as the baseline grows.
 - Does **not** copy this repo's meta files (`README.md`, `LICENSE`, `.gitignore`, `test/`, the
-  `ai-config-sync` script itself), and never touches your Host App's own `.gitignore`.
+  `ace-sync` script itself), and never touches your Host App's own `.gitignore`.
 - Preserves your Host App's own `PROJECT.md` and `bin/setup` on a re-sync (see §6).
 
 **Vendoring into a brand-new (zero-commit) repository?** Create the PR base first: make an empty
@@ -213,21 +213,21 @@ vendoring installer — and a Customization must not break them:
 - **Every parity-link target is shipped.** The whole `docs/` tree is vendored because `AGENTS.md` and
   `.github/copilot-instructions.md` link into it; a copy missing any link target would redden the host's
   own parity check.
-- **Content is copied faithfully.** `ai-config-sync` never rewrites files on copy — that would drift the
+- **Content is copied faithfully.** `ace-sync` never rewrites files on copy — that would drift the
   Adapters from the Canonical Source and break the re-sync `git diff` a host uses to reconcile.
 
 Both are guarded by `test_vendored_copy_passes_parity_check`, which runs `parity_check.rb --root DEST`
-against a vendored copy of the real bundle. Before changing what `ai-config-sync` copies, remember:
+against a vendored copy of the real bundle. Before changing what `ace-sync` copies, remember:
 dropping a link target or rewriting content on copy would break a host silently.
 
 ## 6. Update / re-sync
 
 Updating is a **re-run of the sync followed by a manual merge**
 ([ADR 0001](../adr/0001-distribute-as-copy-in-sync-script.md)) — again from a clone of the
-ai-config bundle repo, since the script is not vendored:
+ace bundle repo, since the script is not vendored:
 
 ```bash
-ruby bin/ai-config-sync /path/to/host-app
+ruby bin/ace-sync /path/to/host-app
 ```
 
 - Baseline files are overwritten; **`PROJECT.md` and an existing `bin/setup` are preserved** (pass
