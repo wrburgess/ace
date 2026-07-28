@@ -28,8 +28,10 @@ over time is which gates require external review vs. self-review; what changes a
   still gets its backstop with no human in the loop. [`verify`](../../skills/verify/SKILL.md) is the
   **sole owner** of that summons. A chain entry with **no row in *Invocation paths*** has no summons
   mechanism at all: it is **unreachable**, and `verify` falls past it immediately rather than starting
-  a window. A declared **Check** cell is host-supplied and run before summoning; where none is
-  declared — as on the baseline — the **summons itself is the probe**, and the outcome is carried
+  a window. A declared **Check** cell is run before summoning — the baseline's Codex row ships an
+  executable ready probe ([ADR 0035](../adr/0035-codex-summons-is-the-local-cli-runtime.md)); where
+  none is declared — as on the baseline's Copilot row, or any host row without one — the **summons
+  itself is the probe**, and the outcome is carried
   forward as `unreachable (precondition unverified)` rather than as a clean timeout
   ([ADR 0027](../adr/0027-reviewer-chain-validated-against-invocation-paths.md), narrowly superseding
   ADR 0026 decision 4). If the whole chain is exhausted, the gate **degrades to "stop and ask the

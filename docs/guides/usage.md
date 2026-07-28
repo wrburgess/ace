@@ -97,7 +97,25 @@ split is what keeps future updates mergeable.
      "deliver unreviewed", and parity hard-fails any attempt. Omitting this section is fine — a
      vendored copy that predates it parses to the same shipped chain. But the *Invocation paths* table
      has **no default**, so the PR gate then has no summons mechanism at all and every run resolves to
-     the floor, `stop-and-ask`. Author *Invocation paths* to actually get a review.
+     the floor, `stop-and-ask`. Author *Invocation paths* to actually get a review. The shipped Codex
+     row is **this repo's real mechanism** — a synchronous run through the local Codex CLI runtime
+     against the checked-out PR head — which hosts replace with their own
+     ([ADR 0035](../adr/0035-codex-summons-is-the-local-cli-runtime.md)). The synchronous-CLI *shape*
+     is valid for any host: run the reviewer and read its returned output, have the summoner relay
+     that output onto a PR surface (an issue-level comment carrying harness/model, reviewed SHA, and
+     findings), and declare an executable, side-effect-free ready probe as the *Check*. Concrete
+     command strings belong here in guidance, not in the machine-read cells. This repo's two
+     commands come from the Codex **companion runtime** — a script this host's installed Codex
+     plugin provides, **external to this bundle** (a plugin script, not bare-CLI subcommands): the
+     script is not on `PATH` — each command runs as
+     `node <plugin-dir>/scripts/codex-companion.mjs <command>` from the plugin's install location.
+     The Check is its `setup --json`, which reports `"ready": true` when installed and
+     authenticated (bare-CLI equivalent: `codex doctor --json`); the summons is its
+     `review`, which synchronously reviews the checked-out head **against the
+     PR's base branch** (its default base is the repository default — pass the base explicitly when
+     the PR targets anything else) and prints the review for the summoner to relay. A host without
+     that runtime authors its own commands the same way — an executable probe plus a review
+     invocation with the PR base and success criteria named.
    - **Intake Pipeline** / **Tool Roster** — the artifact locations `scout`/`clip` and `restock` read
      and write (also additive; repoint them if you relocate those artifacts).
 2. **Add your domain rules** to the [Rules Layer](../../rules/) as Customization — host-specific
