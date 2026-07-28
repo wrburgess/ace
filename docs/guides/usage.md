@@ -104,11 +104,13 @@ split is what keeps future updates mergeable.
      is valid for any host: run the reviewer and read its returned output, have the summoner relay
      that output onto a PR surface (an issue-level comment carrying harness/model, reviewed SHA, and
      findings), and declare an executable, side-effect-free ready probe as the *Check*. Concrete
-     command strings belong here in guidance, not in the machine-read cells. This repo's probe is the
-     Codex **companion runtime's** `setup --json` (a plugin script, not a bare-CLI subcommand — it
-     reports `"ready": true` when installed and authenticated); on the bare Codex CLI the supported
-     equivalent is `codex doctor --json`. Name the exact command and its success criterion when you
-     author your own row's guidance.
+     command strings belong here in guidance, not in the machine-read cells. This repo's two
+     commands, both via the Codex **companion runtime** (a plugin script, not bare-CLI subcommands):
+     the Check is `codex-companion.mjs setup --json`, which reports `"ready": true` when installed
+     and authenticated (bare-CLI equivalent: `codex doctor --json`); the summons is
+     `codex-companion.mjs review`, which reviews the checked-out branch diff against the default
+     base synchronously and prints the review for the summoner to relay. Name the exact commands and
+     their success criteria when you author your own row's guidance.
    - **Intake Pipeline** / **Tool Roster** — the artifact locations `scout`/`clip` and `restock` read
      and write (also additive; repoint them if you relocate those artifacts).
 2. **Add your domain rules** to the [Rules Layer](../../rules/) as Customization — host-specific
