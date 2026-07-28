@@ -61,7 +61,7 @@ context you actually re-read (the PR, its checks, its review threads), not on a 
 
    **The reviewed SHA must equal the PR head at delivery — a hard gate, not a note.** Compare the
    **reviewed SHA** — bound by [`verify`](../../skills/verify/SKILL.md) step 4 (the summon-captured head
-   for a synchronous reviewer, or the artifact-reported commit for an asynchronous one) and carried
+   for a synchronous reviewer, or the **artifact-attested** commit for an asynchronous one) and carried
    forward unchanged (SOW → *Reviewer Backstop*), **not** a value re-read here — against the current PR
    head. Re-reading the head at delivery would make the check pass vacuously; the point is that
    the reviewed SHA is bound to the commit the Reviewer actually saw. If `listen` committed fixes *after*
@@ -73,6 +73,9 @@ context you actually re-read (the PR, its checks, its review threads), not on a 
    If the chain was exhausted, the floor applies: **`stop-and-ask` is the shipped default and is not
    configurable**, so an unreviewed PR does **not** reach a SOW — stop and ask the HC instead of
    delivering with a footnote. Reaching this step with no reviewer response means `verify`'s floor was
+   skipped: stop and recheck. Likewise, an asynchronous review whose artifact attests no commit was
+   never acceptable to `verify` — its step 4 accepts one only when the artifact explicitly
+   attests the reviewed commit it covers — so reaching this step with one also means the floor was
    skipped: stop and recheck.
 5. **Generate the Statement of Work** and post it as a PR comment via the lifecycle host:
    ```markdown
@@ -102,7 +105,7 @@ context you actually re-read (the PR, its checks, its review threads), not on a 
 
    ### Reviewer Backstop
    - Reviewer (harness / model): [which reviewer answered — the primary, or which fallback and why it was reached]
-   - Reviewed SHA: [the commit the review actually covered]
+   - Reviewed SHA: [the commit the review actually covered — summon-captured (sync) or artifact-attested (async)]
    - Disposition: [responded · timed-out · unreachable · floor-hit — and why]
    - Review artifact: [URL of the review comment / thread / body — or "none (floor: stop-and-ask)"]
 

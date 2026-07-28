@@ -135,6 +135,7 @@ class ParityCheck
     "docs/adr/0033-verification-stays-in-main-agent-loop.md",
     "docs/adr/0034-rename-bundle-ai-config-to-ace.md",
     "docs/adr/0035-codex-summons-is-the-local-cli-runtime.md",
+    "docs/adr/0036-async-reviewer-sha-binding-requires-artifact-attestation.md",
     # Standards
     "docs/standards/development-lifecycle.md",
     # Out-of-band research (the per-tool discovery re-verification AGENTS.md cites) and Stack Overlays
