@@ -1,5 +1,18 @@
 # Instruction-file line allowance (soft budget for the Canonical Source + adapters)
 
+> Rationale amendment (#142): **the numbers stand; the *why* has moved.** The ≤~200 figure was anchored
+> on context **capacity** — Claude's published memory guidance about consuming the window. With a 1M-token
+> window that framing is weak, and a future reader could reasonably conclude the budget has expired. It
+> has not. Two grounds carry it now, and both are stronger than the original: (1) **attention, not
+> capacity** — a long always-resident instruction file degrades instruction-*following* quality well
+> before it strains a window, which is the concern Gemini publishes and the one that actually bites; and
+> (2) **the link-following constraint below is orthogonal to window size** — a load-bearing instruction
+> relocated behind a pointer is lost to a tool that does not follow links, however large that tool's
+> window becomes, so nothing about a bigger window revisits it. (That constraint is the one sourced
+> below as of 2026-07-09 and is **not** re-verified here — this amendment revises the *rationale*, not
+> the facts.) Do not relax the allowance because the context window got bigger — that reasoning was
+> never the load-bearing one.
+
 The always-loaded instruction files carry a **recurring, four-way context cost** — `AGENTS.md` is read
 every session by all four tools (natively by Codex/Copilot, via `@AGENTS.md` import-expansion by
 Claude and Gemini). Since `@AGENTS.md` **expands at launch** (imports do not save context), Claude's

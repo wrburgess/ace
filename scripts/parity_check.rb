@@ -132,6 +132,7 @@ class ParityCheck
     "docs/adr/0030-adr-numbering-preflight-enforcement.md",
     "docs/adr/0031-clean-tree-destructive-op-guard.md",
     "docs/adr/0032-enforcement-gap-second-loop-distributed-enforcement.md",
+    "docs/adr/0033-verification-stays-in-main-agent-loop.md",
     # Standards
     "docs/standards/development-lifecycle.md",
     # Out-of-band research (the per-tool discovery re-verification AGENTS.md cites) and Stack Overlays

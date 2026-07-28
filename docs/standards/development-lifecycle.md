@@ -149,10 +149,11 @@ issue.
 wasn't planned; anything planned that's missing), then runs an explicit **adversarial pass** — it
 actively tries to *refute* the change (off-by-one, nil/empty, boundary, duplicate, concurrent,
 unauthorized) and to break its own tests (hunting the false green that would still pass if the feature
-were reverted), assuming the Reviewer's posture and defaulting skeptical so the external review
-confirms rather than corrects; and confirms the PR description is complete. The full-diff review may
-be offloaded to a read-only sub-agent that returns a **drift-report**; findings (including the
-adversarial ones) are classified by the [`PROJECT.md`](../../PROJECT.md) → *Review Severity Framework*.
+were reverted), assuming the Reviewer's posture so the external review confirms rather than corrects;
+and confirms the PR description is complete. **This stage runs in the main agent loop and is never
+offloaded** ([ADR 0033](../adr/0033-verification-stays-in-main-agent-loop.md)) — the AC reads the whole
+diff itself and produces the **drift-report**; findings (including the adversarial ones) are classified
+by the [`PROJECT.md`](../../PROJECT.md) → *Review Severity Framework*.
 
 **Operates on the existing PR — it never opens one.** **Terminal artifact:** the self-review comment
 on the PR. **Exit:** self-review passes and `verify` summons the Reviewer per `PROJECT.md` ->
@@ -258,10 +259,13 @@ safe to re-run** ([ADR 0028](../adr/0028-context-reset-boundary-resumable-stops-
 
 Its design **offloads output-heavy work and protects judgment**
 ([ADR 0005](../adr/0005-ship-hybrid-delegation-offload-retrieval-protect-judgment.md)): the `assess`
-exploration, the `invoke` code+check+fix loop, the `verify` full-diff review, and the `listen` fetch-and-fix
-churn are delegated to sub-agents whose context is discarded (each returns a compact handoff contract —
-`exploration-summary`, `check-result`, `drift-report`); assessment synthesis, plan authoring, `listen`
-severity calls, and the `final` merge-readiness call stay in a clean orchestrator context.
+exploration, the `invoke` code+check+fix loop, and the `listen` fetch-and-fix churn are delegated to
+sub-agents whose context is discarded (each returns a compact handoff contract — `exploration-summary`,
+`check-result`, `review-response`); assessment synthesis, plan authoring, **the whole of `verify`**,
+`listen` severity calls, and the `final` merge-readiness call stay in a clean orchestrator context.
+`verify` is kept for a different reason from the others — verification belongs in the main agent loop as
+a rule ([ADR 0033](../adr/0033-verification-stays-in-main-agent-loop.md)), which is why `ship` resets its
+context before that stage rather than delegating the read.
 
 **The plan gate doubles as a context boundary, and that role is unconditional** — it holds whether or
 not the gate pauses for a human (*Human Gates* may waive the pause; it never waives the reset). Under

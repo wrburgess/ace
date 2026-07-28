@@ -20,17 +20,18 @@ prior stage's terminal artifact was skipped: stop and recheck, don't reinterpret
 
 <how-to-run>
 
-To keep the orchestrator's context lean, `verify` may be **offloaded to a read-only sub-agent** that
-reads the whole PR diff and the plan in its discarded context and returns a compact **drift-report**;
-the orchestrator supplies only pointers (the PR id, the linked issue id, and — when available —
-`invoke`'s returned check-result so the checks aren't re-run) and consumes the report.
+**`verify` runs in the main agent loop and is never offloaded to a sub-agent**
+([ADR 0033](../../docs/adr/0033-verification-stays-in-main-agent-loop.md), amending
+[ADR 0005](../../docs/adr/0005-ship-hybrid-delegation-offload-retrieval-protect-judgment.md)). Run
+Steps 1–6 yourself, reading the whole PR diff and the plan: a *summary* of the diff cannot carry the
+severity classification this stage exists to produce, and the second opinion that guards this PR is the
+independent Reviewer summoned below — not a sub-agent of the same run.
 
-*Graceful degradation ([ADR 0003](../../docs/adr/0003-skills-canonical-body-thin-shims-graceful-degradation.md),
-[ADR 0005](../../docs/adr/0005-ship-hybrid-delegation-offload-retrieval-protect-judgment.md)):* on a
-tool without sub-agents, run Steps 1–6 **inline**. The sub-agent (or you, inline) never posts to the
-lifecycle host — the orchestrator owns that I/O and the attribution.
+This holds on **every** harness, so there is nothing to degrade here: in-loop is not the fallback path,
+it is the only one. The cost — the reading is the largest in the lifecycle — is paid deliberately and
+is why [`ship`](../../skills/ship/SKILL.md) resets its context before entering this stage.
 
-### drift-report (sub-agent → orchestrator)
+### drift-report (verify → the posting orchestrator)
 ```
 { plan_alignment:   { all_implemented: bool, missing_items: [str], scope_creep_files: [str] },
   test_quality:     { meaningful: bool, false_greens: [str], gaps: [str] },
@@ -65,9 +66,9 @@ still composes with `ship`'s verify handoff.
    plan approval — check against that final plan, it is not drift) versus **unsanctioned scope creep**
    (files or behavior that never went back through the gate — that is a finding, regardless of the
    "revisable plan" framing).
-4. **Adversarial pass — try to break your own change.** This is the heart of the review: don't just
-   confirm each plan item has a change — actively hunt the defect an independent second-model Reviewer
-   would flag, and fix it now so their review *confirms* rather than *corrects*.
+4. **Adversarial pass — try to break your own change.** Don't just confirm each plan item has a change:
+   hunt the defect an independent second-model Reviewer would flag, and fix it now so their review
+   *confirms* rather than *corrects*.
    - **Refute the change** — construct the input or state where it breaks: off-by-one, `nil`/empty,
      boundary value, duplicate, concurrent operation, unauthorized path. If you can build the failing
      case, that is a finding.
@@ -79,11 +80,12 @@ still composes with `ship`'s verify handoff.
      Reviewer flags here?" (incomplete coverage — the most frequent; missing error/edge-case handling;
      a requirement from the issue not fully addressed; naming/structure/duplication) — and address it
      before they see it.
-   - **Default skeptical** — an unproven concern is surfaced as a finding, not waved off.
+   - **An unproven concern is surfaced as a finding, not waved off** — a disposition rule: "I couldn't
+     confirm it" resolves to *record it*, never to *drop it*.
 
    Record each finding in the `drift-report` `findings[]` with a severity from
    [`PROJECT.md`](../../PROJECT.md) → *Review Severity Framework* — the same contract as before, no new
-   schema. This pass runs at full strength whether offloaded to a read-only sub-agent or run inline.
+   schema.
 5. **Check cleanliness** — no debug code, no commented-out code, no "TODO"/"needs manual testing"
    comments, no unrelated changes.
 6. **Review the PR description** — Summary, Changes, Technical Approach, Testing, and Checklist present
