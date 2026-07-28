@@ -101,7 +101,10 @@ here so a generic Skill body names the *role* while the host names the *identity
 ([ADR 0026](docs/adr/0026-reviewer-is-a-project-config-value-ac-summons-floor-preserved.md), the same
 argument shape as the lifecycle host in [ADR 0006](docs/adr/0006-baseline-skill-set-and-github-default-lifecycle-host.md)
 and the gate policy in [ADR 0025](docs/adr/0025-human-gate-policy-is-a-project-config-value.md)).
-Ships **business-neutral placeholders**; a Host App names its real reviewer during Customization.
+The chain settings ship as **business-neutral placeholders** a Host App replaces with its real
+reviewer during Customization; the *Invocation paths* Codex row below is the one exception — it
+carries **this repo's real mechanism** ([ADR 0035](docs/adr/0035-codex-summons-is-the-local-cli-runtime.md)),
+which hosts likewise replace.
 
 Like *Human Gates*, this heading is deliberately **absent from the parity check's required sections**,
 so an already-vendored Host App whose `PROJECT.md` predates it keeps parsing to the shipped defaults
