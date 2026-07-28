@@ -1279,7 +1279,7 @@ class ParityCheckTest < Minitest::Test
   end
 
   def test_guide_without_readme_passes
-    # The vendored-copy invariant: ai-config-sync does NOT ship README.md, so a bundle with the guide
+    # The vendored-copy invariant: ace-sync does NOT ship README.md, so a bundle with the guide
     # but no README must still pass. Reachability is not anchored to README (see REQUIRED_GUIDES) — a
     # rule that required a README reference would break every vendored copy. Pins that fix.
     with_bundle do |dir|
@@ -1597,11 +1597,11 @@ class ParityCheckTest < Minitest::Test
   def repo_root = File.expand_path("..", __dir__)
 
   def sync_installer
-    load File.join(repo_root, "bin", "ai-config-sync") unless defined?(AiConfigSync)
-    AiConfigSync
+    load File.join(repo_root, "bin", "ace-sync") unless defined?(AceSync)
+    AceSync
   end
 
-  # Every markdown file this bundle VENDORS, derived by walking ai-config-sync's own ALLOW manifest and
+  # Every markdown file this bundle VENDORS, derived by walking ace-sync's own ALLOW manifest and
   # mirroring its copy semantics exactly (FNM_DOTMATCH, the self-exclusion, the .local skip).
   #
   # Deriving from ALLOW rather than re-globbing the subtrees LINK_CHECKED enumerates is the whole point
@@ -1651,7 +1651,7 @@ class ParityCheckTest < Minitest::Test
     # add an ADR, a Learnings entry, a guide, a Skill body or a shim — or a whole new docs/ subtree —
     # without listing it, and this reddens naming the files, so the fix is mechanical.
     shipped = vendored_markdown
-    refute_empty shipped, "walking ai-config-sync's ALLOW manifest found no markdown - the walk is broken"
+    refute_empty shipped, "walking ace-sync's ALLOW manifest found no markdown - the walk is broken"
     unlisted = shipped - ParityCheck::LINK_CHECKED - LINK_CHECK_EXEMPT
     assert_empty(
       unlisted,

@@ -61,11 +61,11 @@ class ParityCheck
   # names only bundle-owned paths, so the host blast radius is zero. The cost is that the list can rot;
   # that is bought back by `test_link_checked_enumerates_every_bundle_owned_markdown_file` in
   # test/parity_check_test.rb, which globs the subtrees below and fails naming any unlisted file. That
-  # guard lives in test/, which ai-config-sync deliberately never vendors, so it runs in the bundle and
+  # guard lives in test/, which ace-sync deliberately never vendors, so it runs in the bundle and
   # never in a host — which is precisely what lets the SHIPPED constant stay a safe, explicit list.
   #
   # THE RULE: every markdown file this bundle VENDORS is enumerated here. The drift guard derives its
-  # expected set by walking ai-config-sync's own ALLOW manifest — not by re-globbing the subtrees named
+  # expected set by walking ace-sync's own ALLOW manifest — not by re-globbing the subtrees named
   # below — so an entire omitted *subtree* is caught, not just an omitted file. (A guard that globbed
   # the same subtrees this list enumerates could only ever agree with itself.) Add a new ADR, guide,
   # Learnings entry, Skill body, or shim? Add it here too; the drift test names anything you miss.
@@ -133,11 +133,12 @@ class ParityCheck
     "docs/adr/0031-clean-tree-destructive-op-guard.md",
     "docs/adr/0032-enforcement-gap-second-loop-distributed-enforcement.md",
     "docs/adr/0033-verification-stays-in-main-agent-loop.md",
+    "docs/adr/0034-rename-bundle-ai-config-to-ace.md",
     # Standards
     "docs/standards/development-lifecycle.md",
     # Out-of-band research (the per-tool discovery re-verification AGENTS.md cites) and Stack Overlays
     "docs/research/tool-config-discovery.md",
-    "docs/overlays/ai-config-rails.md",
+    "docs/overlays/ace-rails.md",
     # Guides
     "docs/guides/authoring-the-bundle.md",
     "docs/guides/branch-protection.md",
@@ -222,7 +223,7 @@ class ParityCheck
   # for a bundle that ships them" stance as check_rules / check_skills / check_guardrails. The floor is
   # existence: each required guide must be shipped, so a future manifest change can't silently drop the
   # vendor/customize/run walkthrough. Reachability is deliberately NOT anchored to README.md — README
-  # is not vendored (ai-config-sync skips it) and a Host App owns its own, so a "referenced by README"
+  # is not vendored (ace-sync skips it) and a Host App owns its own, so a "referenced by README"
   # rule would fail in-host, breaking the vendored-copy parity invariant the guide itself documents.
   # In-host the guide is discoverable under docs/guides/; in this repo README links it (guarded by
   # check_links, since README is in LINK_CHECKED).

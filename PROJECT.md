@@ -18,7 +18,7 @@ this table — they never hardcode a stack's commands. **Host Apps: replace thes
 commands during Customization** (e.g. a Rails host: lint `bundle exec rubocop -a`, tests
 `bundle exec rspec`, security `bin/brakeman --no-pager -q`, dependency audit `bin/bundler-audit check`;
 a JS/TS host: lint `npm run lint`, tests `npm test`, dependency audit `npm audit`). A **Stack Overlay**
-such as `ai-config-rails` can ship a ready-to-paste command set for its stack.
+such as `ace-rails` can ship a ready-to-paste command set for its stack.
 
 This config repo ships no application code, so its own gate is the structural parity check plus the
 dependency-free stdlib self-tests:
@@ -135,7 +135,7 @@ and stays green.
   *Human Gates* below) — a human is already standing at that gate. **The shipped baseline is now `auto`**
   ([ADR 0029](docs/adr/0029-baseline-ships-ungated-to-merge.md)), and under `auto` nobody is at the plan
   gate, so the plan-gate summons has no owner or mechanism yet; that residual risk is tracked in
-  [#129](https://github.com/wrburgess/ai-config/issues/129), and
+  [#129](https://github.com/wrburgess/ace/issues/129), and
   [ADR 0026](docs/adr/0026-reviewer-is-a-project-config-value-ac-summons-floor-preserved.md)
   decision 2 records it as deliberately unsettled.
 - **A response** is a reply on **any** of the three surfaces — an issue-level PR comment, an **inline

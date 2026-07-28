@@ -25,7 +25,7 @@ Work out which one you are in **before** you start, because several rows below a
 
 | | **Host-side trim** (a Host App with the bundle vendored) | **Bundle-side trim** (the config repo that ships the bundle) |
 |---|---|---|
-| Has `test/` | **No** — `ai-config-sync` never vendors it | Yes |
+| Has `test/` | **No** — `ace-sync` never vendors it | Yes |
 | Has the bundle's `README.md` | **No** — a host owns its own README; it is not in the installer's `ALLOW` | Yes |
 | Gate to run | `ruby scripts/parity_check.rb` | the parity check **plus** the self-tests |
 | The trim survives an update | **No** — see the warning below | Yes, it is the source |
@@ -33,9 +33,9 @@ Work out which one you are in **before** you start, because several rows below a
 Rows marked **(bundle-side only)** below touch files a Host App never receives. If you are trimming a
 host, skip them — do not go looking for the file.
 
-## Read this first — the next `ai-config-sync` puts all of it back
+## Read this first — the next `ace-sync` puts all of it back
 
-**A trim is not durable.** `bin/ai-config-sync` preserves exactly two paths in a Host App —
+**A trim is not durable.** `bin/ace-sync` preserves exactly two paths in a Host App —
 `PROJECT.md` and `bin/setup` — and overwrites everything else from the source bundle
 ([ADR 0001](../adr/0001-distribute-as-copy-in-sync-script.md)). So the next time the host updates:
 
@@ -72,7 +72,7 @@ rest — the skills are inert unless invoked) over trimming it.
 | `docs/reference/learnings/` | The Learnings Log — schema, index, and all entries |
 | `docs/reference/intake-inbox/` | The manual-drop inbox and its drop template |
 | `docs/guides/intake-sweep-scheduling.md` | The sweep-scheduling guide |
-| `test/voices_watchlist_test.rb` · `test/voices_roster_parity_test.rb` | The intake data-contract self-tests (bundle-only — `ai-config-sync` never vendors `test/`, so a Host App has nothing to delete here) |
+| `test/voices_watchlist_test.rb` · `test/voices_roster_parity_test.rb` | The intake data-contract self-tests (bundle-only — `ace-sync` never vendors `test/`, so a Host App has nothing to delete here) |
 
 **Keep the ADRs.** [ADR 0012](../adr/0012-intake-pipeline-placement.md),
 [0013](../adr/0013-scheduled-intake-sweep-and-empty-sweep-policy.md),
@@ -190,7 +190,7 @@ tests that pin it:
 ```sh
 ruby scripts/parity_check.rb
 ruby test/parity_check_test.rb
-ruby test/ai_config_sync_test.rb
+ruby test/ace_sync_test.rb
 ```
 
 `check_links` now scans every markdown file the bundle vendors — the shims included — so a Group-4 link

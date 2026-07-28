@@ -74,7 +74,7 @@ the roadmap.
    - A two-tier **Rules Layer** (an always-resident Lean Core of `rules/*.md` plus Deferred Deep Docs
      pulled in on demand) carries the domain guidance.
    - The baseline stays stack-neutral — extend it per host, or vendor a matching **Stack Overlay** (e.g.
-     `ai-config-rails`) alongside
+     `ace-rails`) alongside
      ([ADR 0004](docs/adr/0004-two-tier-rules-layer-progressive-context.md)).
 
 5. **Transparent — see *who/what* made each change and *why* each decision was made.** Two mechanisms,
@@ -103,7 +103,7 @@ the roadmap.
    - `/restock` maintains the **Tool Roster** (`docs/reference/tool-roster.yml`) — a current-state
      snapshot of coding harnesses & models (versions, cost, effort tiers) that informs those choices
      ([ADR 0023](docs/adr/0023-tool-roster-facts-tracker-sibling-to-intake.md)).
-   - *Roadmap ([#77](https://github.com/wrburgess/ai-config/issues/77)):* today only the per-agent
+   - *Roadmap ([#77](https://github.com/wrburgess/ace/issues/77)):* today only the per-agent
      model **declaration** in [`PROJECT.md`](PROJECT.md) exists — not yet the routing that spends it
      wisely.
 
@@ -164,10 +164,10 @@ Vendor the bundle into your project (a **Host App**), then activate the guardrai
 
 ```bash
 # Preview what would be copied (writes nothing):
-ruby bin/ai-config-sync --dry-run /path/to/host-app
+ruby bin/ace-sync --dry-run /path/to/host-app
 
 # Vendor it in, then activate the git hooks:
-ruby bin/ai-config-sync /path/to/host-app
+ruby bin/ace-sync /path/to/host-app
 cd /path/to/host-app && bin/setup
 ```
 
@@ -184,7 +184,7 @@ cd /path/to/host-app && bin/setup
 - **Customize** — edit [`PROJECT.md`](PROJECT.md) (preserved on re-sync, with an existing `bin/setup`) and add your
   domain Patterns / Anti-Patterns to the Rules Layer as Customization; leave `AGENTS.md` and the
   Adapters as the baseline so every tool stays in lockstep. Steps → [`usage.md`](docs/guides/usage.md).
-- **Update / re-sync** — re-run `ruby bin/ai-config-sync /path/to/host-app`, then reconcile with
+- **Update / re-sync** — re-run `ruby bin/ace-sync /path/to/host-app`, then reconcile with
   `git diff`. Baseline files are overwritten; `PROJECT.md` and an existing `bin/setup` are preserved (`--force` overwrites `PROJECT.md` for a
   deliberate reset) ([ADR 0001](docs/adr/0001-distribute-as-copy-in-sync-script.md)).
 - **Branch protection** — full setup, the AI-vs-human exemption, and the server-side (GitHub) step are

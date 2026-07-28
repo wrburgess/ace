@@ -18,7 +18,7 @@ jobs:
           # No bundler: the checker and its self-test are stdlib-only (ADR 0008).
           bundler-cache: false
 
-      # The bundle's own self-tests live in test/, which ai-config-sync deliberately never vendors
+      # The bundle's own self-tests live in test/, which ace-sync deliberately never vendors
       # into a Host App (usage guide §1). Each step below is gated on the EXACT file it runs — a
       # repo-only sentinel — never on `test/` existing: a Host App may own an unrelated test/ tree
       # of its own, and a directory-presence gate would send it hunting for un-vendored bundle
@@ -29,8 +29,8 @@ jobs:
         run: ruby test/parity_check_test.rb
 
       - name: Sync self-test (proves the vendoring installer works)
-        if: ${{ hashFiles('test/ai_config_sync_test.rb') != '' }}
-        run: ruby test/ai_config_sync_test.rb
+        if: ${{ hashFiles('test/ace_sync_test.rb') != '' }}
+        run: ruby test/ace_sync_test.rb
 
       - name: Protected-branch extractor self-test
         if: ${{ hashFiles('test/protected_branches_test.rb') != '' }}

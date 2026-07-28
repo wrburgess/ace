@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
-# Self-test for bin/ai-config-sync. An installer with no test is a false green: these fixtures prove
+# Self-test for bin/ace-sync. An installer with no test is a false green: these fixtures prove
 # it produces a clean, owned copy (acceptance criterion #1), excludes repo-meta and tool-local
 # settings, preserves the Host App's PROJECT.md on re-sync, tolerates a partial/growing bundle, and
 # that a vendored copy's OWN parity check still passes. Stdlib only (minitest, tmpdir, fileutils,
 # rbconfig) — no bundler, mirroring test/parity_check_test.rb and ADR 0008.
 #
-# Run: ruby test/ai_config_sync_test.rb
+# Run: ruby test/ace_sync_test.rb
 
 require "minitest/autorun"
 require "tmpdir"
@@ -14,8 +14,8 @@ require "fileutils"
 require "rbconfig"
 require "digest"
 
-class AiConfigSyncTest < Minitest::Test
-  SCRIPT = File.expand_path("../bin/ai-config-sync", __dir__)
+class AceSyncTest < Minitest::Test
+  SCRIPT = File.expand_path("../bin/ace-sync", __dir__)
   PARITY = File.expand_path("../scripts/parity_check.rb", __dir__)
   REPO_ROOT = File.expand_path("..", __dir__)
   RUBY = RbConfig.ruby
@@ -42,12 +42,12 @@ class AiConfigSyncTest < Minitest::Test
     File.write(File.join(dir, ".claude/settings.json"), "{}\n")
     File.write(File.join(dir, ".claude/settings.local.json"), "{\"local\":true}\n")
     FileUtils.mkdir_p(File.join(dir, "bin"))
-    File.write(File.join(dir, "bin/ai-config-sync"), "#!/usr/bin/env ruby\n")
+    File.write(File.join(dir, "bin/ace-sync"), "#!/usr/bin/env ruby\n")
     File.write(File.join(dir, "README.md"), "# config repo readme\n")
     File.write(File.join(dir, "LICENSE"), "MIT\n")
     File.write(File.join(dir, ".gitignore"), "*.local\n")
     FileUtils.mkdir_p(File.join(dir, "test"))
-    File.write(File.join(dir, "test/ai_config_sync_test.rb"), "# self\n")
+    File.write(File.join(dir, "test/ace_sync_test.rb"), "# self\n")
     dir
   end
 
@@ -96,14 +96,27 @@ class AiConfigSyncTest < Minitest::Test
     end
   end
 
+  # Happy-path CLI string (issue #148 rename): the stdout report banner names the script by its
+  # current name. `sync` merges stderr into stdout, so capture stdout alone here.
+  def test_report_banner_names_ace_sync
+    Dir.mktmpdir do |src|
+      Dir.mktmpdir do |dst|
+        build_source(src)
+        out = IO.popen([RUBY, SCRIPT, "--from", src, dst], err: File::NULL, &:read)
+        assert_equal 0, $?.exitstatus, out
+        assert_includes out, "ace-sync -> ", "stdout report banner must name ace-sync"
+      end
+    end
+  end
+
   # ---- exclusions: repo-meta and tool-local settings are never vendored ----
   def test_excludes_repo_meta_and_local_settings
     Dir.mktmpdir do |src|
       Dir.mktmpdir do |dst|
         build_source(src)
         sync(dst, from: src)
-        %w[README.md LICENSE .gitignore bin/ai-config-sync bin
-           .claude/settings.local.json test/ai_config_sync_test.rb test].each do |rel|
+        %w[README.md LICENSE .gitignore bin/ace-sync bin
+           .claude/settings.local.json test/ace_sync_test.rb test].each do |rel|
           refute File.exist?(File.join(dst, rel)), "#{rel} must NOT be vendored"
         end
       end
@@ -218,7 +231,7 @@ class AiConfigSyncTest < Minitest::Test
         assert_equal 0, status, out
         assert_equal host_test, File.read(File.join(dst, "test/host_app_test.rb")),
                      "host-owned test file must be untouched"
-        refute File.exist?(File.join(dst, "test/ai_config_sync_test.rb")),
+        refute File.exist?(File.join(dst, "test/ace_sync_test.rb")),
                "bundle self-tests must NOT be vendored into a host-owned test/ tree"
       end
     end
@@ -260,6 +273,20 @@ class AiConfigSyncTest < Minitest::Test
       out = IO.popen([RUBY, SCRIPT, "--from", src], err: [:child, :out], &:read)
       refute_equal 0, $?.exitstatus
       assert_match(/target/i, out)
+    end
+  end
+
+  # The user-facing CLI strings carry the script's name (issue #148 rename): a regression back to
+  # the old name would ship green without these. Sad path — the error channel is stderr, and its
+  # prefix is the script's current name.
+  def test_missing_target_error_is_ace_sync_prefixed_on_stderr
+    Dir.mktmpdir do |src|
+      build_source(src)
+      stderr_path = File.join(src, "stderr.txt")
+      IO.popen([RUBY, SCRIPT, "--from", src], err: stderr_path, &:read)
+      refute_equal 0, $?.exitstatus
+      assert_match(/\Aace-sync:/, File.read(stderr_path),
+                   "stderr must begin with the script's current name")
     end
   end
 

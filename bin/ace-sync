@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-# ai-config-sync — vendor the Generic Baseline Config Bundle into a Host App (ADR 0001).
+# ace-sync — vendor the Generic Baseline Config Bundle into a Host App (ADR 0001).
 #
 # Copies the bundle's files into a target Host App directory, leaving the Host App owning plain
 # files at their expected paths — no submodule, no gem, no symlinks (ADR 0001). Re-running is how a
@@ -12,7 +12,7 @@
 # so it runs on a bare Ruby in CI.
 #
 # Usage:
-#   ruby bin/ai-config-sync [options] TARGET
+#   ruby bin/ace-sync [options] TARGET
 #     TARGET        Host App directory to vendor the bundle into (must already exist).
 #     --from DIR    Source bundle directory (default: this repo's root).
 #     --dry-run     Print the planned actions; write nothing.
@@ -24,7 +24,7 @@
 require "optparse"
 require "fileutils"
 
-class AiConfigSync
+class AceSync
   # Top-level entries that make up the Generic Baseline. Copied ONLY IF PRESENT, so the same script
   # keeps working as later baseline issues add .claude/, .githooks/, skills/, rules/,
   # docs/standards/, and more bin/ scripts. Add a new top-level surface here only when one appears.
@@ -42,7 +42,7 @@ class AiConfigSync
 
   # This installer's own path, relative to the bundle root. It vendors the bundle; a Host App is a
   # consumer, not a re-distributor, so the script itself is never copied (issue #5 Q4).
-  SELF_REL = File.join("bin", "ai-config-sync")
+  SELF_REL = File.join("bin", "ace-sync")
 
   # Tool-local, non-shared settings (e.g. .claude/settings.local.json) — never vendored.
   LOCAL_RE = /\.local(\.[^.\/]*)?\z/
@@ -70,15 +70,15 @@ class AiConfigSync
 
   def validate
     unless File.directory?(@source)
-      @err.puts "ai-config-sync: source is not a directory: #{@source}"
+      @err.puts "ace-sync: source is not a directory: #{@source}"
       return false
     end
     unless File.directory?(@target)
-      @err.puts "ai-config-sync: target is not a directory: #{@target}"
+      @err.puts "ace-sync: target is not a directory: #{@target}"
       return false
     end
     if @source == @target
-      @err.puts "ai-config-sync: refusing to sync a directory onto itself: #{@source}"
+      @err.puts "ace-sync: refusing to sync a directory onto itself: #{@source}"
       return false
     end
     true
@@ -130,7 +130,7 @@ class AiConfigSync
 
   def report
     tag = @dry_run ? "[dry-run] " : ""
-    @out.puts "#{tag}ai-config-sync -> #{@target}"
+    @out.puts "#{tag}ace-sync -> #{@target}"
     @out.puts "#{tag}  copied:    #{@copied.length} file#{'s' unless @copied.length == 1}"
     return if @preserved.empty?
 
@@ -142,7 +142,7 @@ end
 if $PROGRAM_NAME == __FILE__
   options = { source: File.expand_path("..", __dir__), dry_run: false, force: false }
   parser = OptionParser.new do |opts|
-    opts.banner = "Usage: ruby bin/ai-config-sync [options] TARGET"
+    opts.banner = "Usage: ruby bin/ace-sync [options] TARGET"
     opts.on("--from DIR", "Source bundle directory (default: this repo's root)") { |v| options[:source] = v }
     opts.on("--dry-run", "Print the planned actions; write nothing") { options[:dry_run] = true }
     opts.on("--force", "Overwrite an existing PROJECT.md too") { options[:force] = true }
@@ -155,12 +155,12 @@ if $PROGRAM_NAME == __FILE__
 
   target = ARGV.shift
   if target.nil? || target.empty?
-    warn "ai-config-sync: missing TARGET directory"
+    warn "ace-sync: missing TARGET directory"
     warn parser.banner
     exit 1
   end
 
-  exit AiConfigSync.new(
+  exit AceSync.new(
     source: options[:source], target: target, dry_run: options[:dry_run], force: options[:force]
   ).run
 end

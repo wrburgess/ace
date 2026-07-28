@@ -3,7 +3,7 @@
 **Applies to:** talking with the Human Contributor — clarifying questions, plans, explanations, status
 **Deep doc:** none (calibration lives in this file)
 
-> Tier-1 Lean Core ([ADR 0004](../docs/adr/0004-two-tier-rules-layer-progressive-context.md)): always-resident invariants. Keep this file lean. These are business-neutral, stack-neutral starters; **extend per host** — concrete, audience-named examples live in the matching **Stack Overlay** (e.g. `ai-config-rails`), vendored alongside the baseline.
+> Tier-1 Lean Core ([ADR 0004](../docs/adr/0004-two-tier-rules-layer-progressive-context.md)): always-resident invariants. Keep this file lean. These are business-neutral, stack-neutral starters; **extend per host** — concrete, audience-named examples live in the matching **Stack Overlay** (e.g. `ace-rails`), vendored alongside the baseline.
 
 ## Patterns
 
