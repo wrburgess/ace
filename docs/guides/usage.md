@@ -107,9 +107,11 @@ split is what keeps future updates mergeable.
      command strings belong here in guidance, not in the machine-read cells. This repo's two
      commands come from the Codex **companion runtime** — a script this host's installed Codex
      plugin provides, **external to this bundle** (a plugin script, not bare-CLI subcommands): the
-     Check is `codex-companion.mjs setup --json`, which reports `"ready": true` when installed and
-     authenticated (bare-CLI equivalent: `codex doctor --json`); the summons is
-     `codex-companion.mjs review`, which synchronously reviews the checked-out head **against the
+     script is not on `PATH` — each command runs as
+     `node <plugin-dir>/scripts/codex-companion.mjs <command>` from the plugin's install location.
+     The Check is its `setup --json`, which reports `"ready": true` when installed and
+     authenticated (bare-CLI equivalent: `codex doctor --json`); the summons is its
+     `review`, which synchronously reviews the checked-out head **against the
      PR's base branch** (its default base is the repository default — pass the base explicitly when
      the PR targets anything else) and prints the review for the summoner to relay. A host without
      that runtime authors its own commands the same way — an executable probe plus a review
