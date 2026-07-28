@@ -177,15 +177,19 @@ After posting the self-review, take each chain entry in order:
    probe**: issue it, and treat **`precondition unverified`** as a **qualifier** on whatever terminal
    outcome follows (steps 5–6), not an outcome in itself — a summons that created **no request** is
    `unreachable (precondition unverified)`; a request created but silent through the window is
-   `timed-out (precondition unverified)`; a reply is `responded`. The baseline ships no executable
-   check, so this is the default path — but it never collapses a *pending* request into a clean
+   `timed-out (precondition unverified)`; a reply is `responded`. The baseline's Codex row declares
+   an executable ready probe ([ADR 0035](../../docs/adr/0035-codex-summons-is-the-local-cli-runtime.md)),
+   so **Declared** applies there — run the probe before summoning; the absent-Check path remains the
+   default for rows without one — and neither path ever collapses a *pending* request into a clean
    `unreachable`.
 4. **Snapshot, then summon.** Before issuing the summons capture the **current PR head SHA** and a
    **baseline of the review threads/comments that already exist** on the PR; then summon via the declared
    mechanism and wait up to the **bounded window**. **How the reviewed SHA binds depends on the
    mechanism:**
-   - **Synchronous** reviewer that reviews the checked-out head (the baseline CLI route) → the
-     summon-captured SHA **is** the reviewed SHA, bound by construction.
+   - **Synchronous** reviewer that reviews the **checked-out PR head** (the baseline Codex row: the
+     local Codex CLI runtime) → the summon-captured SHA **is** the reviewed SHA, bound by
+     construction. A first invocation that returns **empty output while the ready probe passes** is a
+     known runtime flake: **retry once** before recording any outcome.
    - **Asynchronous** reviewer that fetches the PR later (a platform review) → the head may advance
      before it fetches, so the summon-captured SHA is only a *lower bound*. Take the reviewed SHA from the
      **review artifact itself** (the commit the platform records the review against); if the artifact pins
@@ -200,8 +204,12 @@ After posting the self-review, take each chain entry in order:
    diff thread**, or a **review body** — and only one that is **new since the summon snapshot (step 4)**:
    a pre-existing reply from an earlier round is **not** *this* summons's response and must never be
    counted as one. Poll all three surfaces (reading only issue-level comments makes an automated inline
-   review invisible — the trap [`listen`](../../skills/listen/SKILL.md) Step 1 warns about). For a
-   synchronous reviewer running on the checked-out head (the baseline CLI route) that new reply
+   review invisible — the trap [`listen`](../../skills/listen/SKILL.md) Step 1 warns about). A
+   **synchronous CLI reviewer's response arrives as returned output**, not on the PR — so the summoner
+   **posts it onto a PR surface**: an issue-level PR comment carrying the reviewer's harness/model, the
+   reviewed SHA, and the findings. That relay is what keeps the three-surface definition,
+   [`listen`](../../skills/listen/SKILL.md)'s fetch, and the durable evidence record below holding
+   unchanged. For a synchronous reviewer running on the checked-out PR head that relayed reply
    inherently reviewed the summon-captured SHA; for an asynchronous platform reviewer, attribute the new
    reply to this summons **and take its reviewed SHA from the artifact, not the summon-time head**
    (step 4). **A summons that merely returned success is not itself a

@@ -155,10 +155,12 @@ The mechanism for summoning each harness. **This table is the chain's membership
 named in *Primary* or *Fallback order* with no row here has no summons mechanism, so it is
 **unreachable** — the parity check reports it, and `verify` falls straight past it rather than
 starting a window ([ADR 0027](docs/adr/0027-reviewer-chain-validated-against-invocation-paths.md)).
-A Host App replaces these rows with its real commands during Customization.
+The Codex row names **this repo's real mechanism**, not a neutral placeholder
+([ADR 0035](docs/adr/0035-codex-summons-is-the-local-cli-runtime.md)); a Host App replaces these rows
+with its real commands during Customization.
 
-The **Check** cell is **optional and host-supplied**, narrowly superseding
-[ADR 0026](docs/adr/0026-reviewer-is-a-project-config-value-ac-summons-floor-preserved.md)
+The **Check** cell is **optional** — host-supplied wherever the baseline declares none — narrowly
+superseding [ADR 0026](docs/adr/0026-reviewer-is-a-project-config-value-ac-summons-floor-preserved.md)
 decision 4's unconditional model:
 
 - **Declared** → run it *before* summoning; an unmet precondition falls back immediately rather than
@@ -169,9 +171,11 @@ decision 4's unconditional model:
   window — never collapsing a *pending* request into a clean `unreachable`. (This mirrors
   [`verify`](skills/verify/SKILL.md)'s summon steps; the two must stay aligned.)
 
-**The baseline ships no executable check**, and the placeholders say so rather than implying one:
-the Codex check needs GitHub App authentication an AC's normal token does not have (it returns
-401/403), and the Copilot check *is* the summons, so it cannot precede one without a side effect.
+**The baseline now ships one executable check** — the Codex row's ready probe, which can run *before*
+summoning without a side effect, so it is declared rather than left host-supplied
+([ADR 0035](docs/adr/0035-codex-summons-is-the-local-cli-runtime.md), narrowly superseding
+ADR 0027 decision 4 for that row only). The Copilot check *is* the summons — it cannot precede one
+without a side effect — so that row's Check stays host-supplied.
 
 **The first column is the harness name, by contract.** A host may rename, add, drop or reorder every
 column *after* it — the mechanism column is found by its `Summons` header, falling back to the second
@@ -181,15 +185,16 @@ every chain entry reads as unreachable and the parity check reddens.
 
 | Harness | Summons | Precondition | Check |
 |---------|---------|--------------|-------|
-| Codex | mention `@codex review` on the PR | its GitHub app is installed on the repository | *(host-supplied — none shipped)* |
+| Codex | run the review synchronously through the local Codex CLI runtime against the checked-out PR head (the reviewed SHA binds by construction) | the Codex CLI runtime is installed and authenticated | the runtime's setup/ready probe (side-effect-free; run before summoning) |
 | Copilot | request a PR review via the host platform's API | the account has Copilot code review enabled | *(host-supplied — none shipped)* |
 | *(host adds its own)* | — | — | — |
 
-**Both shipped mechanisms are PR-gate-only** — "on the PR", "a PR review via the host platform's
+**Both shipped mechanisms are still PR-gate-only** — the CLI runtime reviews the checked-out
+implementation diff of a PR head, and the Copilot path requests "a PR review via the host platform's
 API". At the **plan** gate there is therefore **no summons mechanism at all**, whoever owns it: the
 open question ADR 0026 decision 2 records is *who* summons, and this table is why answering that
-alone would not be enough. A host wanting a plan-gate review must add a mechanism that does not
-require a PR.
+alone would not be enough — the [#129](https://github.com/wrburgess/ace/issues/129) residual is
+unchanged. A host wanting a plan-gate review must add a mechanism that does not require a PR.
 
 ## Human Gates
 

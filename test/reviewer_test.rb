@@ -1681,6 +1681,22 @@ class ReviewerTest < Minitest::Test
                     "skills/verify must carry the same qualifier outcome, or the two contracts drift"
   end
 
+  def test_cli_route_contract_agrees_across_project_md_and_verify
+    # DRIFT GUARD, same shape as the qualifier pin above. The synchronous-CLI route lives in TWO
+    # governing contracts — PROJECT.md -> Invocation paths (the Codex Summons cell) and skills/verify
+    # -> Summon step 4 (the reviewed-SHA-binds-by-construction branch) — and verify previously named
+    # it only as a dangling forward reference ("the baseline CLI route") that no declaration carried.
+    # Pin the literal phrase in BOTH so a one-sided rewording reddens rather than silently detaching
+    # the procedure from the declaration it executes (ADR 0035).
+    phrase = "checked-out PR head"
+    assert_includes File.read(project_md_path), phrase,
+                    "PROJECT.md -> Invocation paths must name the checked-out-PR-head route the " \
+                    "Codex summons runs against"
+    assert_includes File.read(verify_skill_path), phrase,
+                    "skills/verify must name the same checked-out-PR-head route, or the two " \
+                    "contracts drift"
+  end
+
   def test_real_project_md_actually_contains_the_section
     # THE PRECONDITION FOR EVERY DRIFT GUARD BELOW. `from_file` fail-safes to DEFAULTS when the
     # section is absent, so deleting the whole `## Reviewer` section - or merely renaming its heading
@@ -1771,20 +1787,29 @@ class ReviewerTest < Minitest::Test
                  "every harness in the shipped reviewer chain must have a summons mechanism"
   end
 
-  def test_real_project_md_declares_no_executable_precondition_check
-    # Pins ADR 0027 decision 4 against the file. The baseline ships NO executable check — the Codex one
-    # needs GitHub App auth an AC's normal token lacks, and the Copilot one IS the summons — so the
-    # `Check` cells say host-supplied and the preamble no longer claims an unconditional pre-check.
-    # Without this, a future edit could quietly re-add a check the AC cannot run, and prose is the one
-    # thing the parity check never reads.
+  def test_real_project_md_codex_check_is_executable_and_async_rows_stay_host_supplied
+    # Pins ADR 0035 against the file — the narrow supersession of ADR 0027 decision 4, for the Codex
+    # row ONLY. That row now names this repo's real mechanism (the local Codex CLI runtime), whose
+    # ready probe CAN run before summoning without a side effect, so its Check cell declares the first
+    # genuinely executable check the baseline ships. The Copilot check still IS the summons, so that
+    # row stays host-supplied — the original guard against quietly re-adding a check the AC cannot
+    # run, re-aimed at the async row. Prose is the one thing the parity check never reads, so both
+    # directions are pinned here.
     text = File.read(project_md_path)
     section = text[/#{Regexp.escape(Reviewer::INVOCATION_SECTION)}.*?(?=\n## )/m]
     refute_nil section, "the invocation sub-table must be locatable"
-    assert_includes section, "host-supplied",
-                    "the shipped Check cells must be marked host-supplied, not imply a shipped check"
-    refute_match(/precondition that must be verified first/, section,
-                 "the preamble must no longer claim an unconditional pre-check (ADR 0027 supersedes " \
-                 "ADR 0026 decision 4)")
+    codex_row = section[/^\|\s*Codex\s*\|.*$/]
+    refute_nil codex_row, "the Codex invocation row must be present"
+    assert_match(/ready probe/, codex_row,
+                 "the Codex Check cell must declare the executable ready probe (ADR 0035)")
+    refute_includes codex_row, "host-supplied",
+                    "the Codex Check cell must no longer read host-supplied — the baseline ships " \
+                    "this row's check (ADR 0035, narrowly superseding ADR 0027 decision 4)"
+    copilot_row = section[/^\|\s*Copilot\s*\|.*$/]
+    refute_nil copilot_row, "the Copilot invocation row must be present"
+    assert_includes copilot_row, "host-supplied",
+                    "the Copilot Check cell must stay host-supplied — its check IS the summons, so " \
+                    "a shipped one would re-add a check the AC cannot run without a side effect"
     assert_includes section, "the summons is the probe",
                     "the absent-check path must be stated, not left to be inferred"
   end

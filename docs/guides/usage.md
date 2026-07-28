@@ -97,7 +97,15 @@ split is what keeps future updates mergeable.
      "deliver unreviewed", and parity hard-fails any attempt. Omitting this section is fine — a
      vendored copy that predates it parses to the same shipped chain. But the *Invocation paths* table
      has **no default**, so the PR gate then has no summons mechanism at all and every run resolves to
-     the floor, `stop-and-ask`. Author *Invocation paths* to actually get a review.
+     the floor, `stop-and-ask`. Author *Invocation paths* to actually get a review. The shipped Codex
+     row is **this repo's real mechanism** — a synchronous run through the local Codex CLI runtime
+     against the checked-out PR head — which hosts replace with their own
+     ([ADR 0035](../adr/0035-codex-summons-is-the-local-cli-runtime.md)). The synchronous-CLI *shape*
+     is valid for any host: run the reviewer and read its returned output, have the summoner relay
+     that output onto a PR surface (an issue-level comment carrying harness/model, reviewed SHA, and
+     findings), and declare an executable, side-effect-free ready probe as the *Check*. Concrete
+     command strings belong here in guidance, not in the machine-read cells — e.g. this repo's probe
+     is checking that the runtime's `setup --json` reports ready before summoning.
    - **Intake Pipeline** / **Tool Roster** — the artifact locations `scout`/`clip` and `restock` read
      and write (also additive; repoint them if you relocate those artifacts).
 2. **Add your domain rules** to the [Rules Layer](../../rules/) as Customization — host-specific
