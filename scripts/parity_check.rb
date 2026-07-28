@@ -213,6 +213,7 @@ class ParityCheck
     "docs/reference/learnings/entries/2026-07-08-pocock-code-review-fowler-smells.md",
     "docs/reference/learnings/entries/2026-07-08-pocock-grilling-fixes-backport.md",
     "docs/reference/learnings/entries/2026-07-08-pocock-wayfinder-blocking-tickets.md",
+    "docs/reference/learnings/entries/2026-07-28-thariq-context-engineering-claude-5.md",
   ].freeze
 
   # Usage guides (ADR 0008 surface finalization, issue #11). Checked only for a bundle that ships a
