@@ -105,12 +105,15 @@ split is what keeps future updates mergeable.
      that output onto a PR surface (an issue-level comment carrying harness/model, reviewed SHA, and
      findings), and declare an executable, side-effect-free ready probe as the *Check*. Concrete
      command strings belong here in guidance, not in the machine-read cells. This repo's two
-     commands, both via the Codex **companion runtime** (a plugin script, not bare-CLI subcommands):
-     the Check is `codex-companion.mjs setup --json`, which reports `"ready": true` when installed
-     and authenticated (bare-CLI equivalent: `codex doctor --json`); the summons is
-     `codex-companion.mjs review`, which reviews the checked-out branch diff against the default
-     base synchronously and prints the review for the summoner to relay. Name the exact commands and
-     their success criteria when you author your own row's guidance.
+     commands come from the Codex **companion runtime** — a script this host's installed Codex
+     plugin provides, **external to this bundle** (a plugin script, not bare-CLI subcommands): the
+     Check is `codex-companion.mjs setup --json`, which reports `"ready": true` when installed and
+     authenticated (bare-CLI equivalent: `codex doctor --json`); the summons is
+     `codex-companion.mjs review`, which synchronously reviews the checked-out head **against the
+     PR's base branch** (its default base is the repository default — pass the base explicitly when
+     the PR targets anything else) and prints the review for the summoner to relay. A host without
+     that runtime authors its own commands the same way — an executable probe plus a review
+     invocation with the PR base and success criteria named.
    - **Intake Pipeline** / **Tool Roster** — the artifact locations `scout`/`clip` and `restock` read
      and write (also additive; repoint them if you relocate those artifacts).
 2. **Add your domain rules** to the [Rules Layer](../../rules/) as Customization — host-specific
