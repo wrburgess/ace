@@ -1750,6 +1750,26 @@ class ReviewerTest < Minitest::Test
                     "attribution (ADR 0036 decision 4)"
   end
 
+  def test_real_project_md_copilot_row_declares_its_attestation_field
+    # DRIFT GUARD (Codex review, PR #153). The guidance below the Invocation-paths table tells a host
+    # to name the artifact's commit-attestation field IN THE ROW, and the shipped Copilot row is the
+    # baseline's one asynchronous row — so it must model that declaration itself. As first authored,
+    # only the surrounding prose named `commit_id` while the row said nothing, leaving a host copying
+    # the baseline with no row-level declaration to implement the fail-closed attestation rule against
+    # (ADR 0036 decision 5). Row-anchored on purpose: a file-wide include would pass on the prose
+    # mention alone, which is exactly the inconsistency this guard exists to redden. Anchored BELOW
+    # the `### Invocation paths` heading, because the Attribution table's Copilot row matches the
+    # same `| Copilot |` prefix earlier in the file.
+    md_lines = File.read(project_md_path).lines
+    start = md_lines.index { |l| l.start_with?("### Invocation paths") }
+    refute_nil start, "the shipped PROJECT.md must keep its Invocation paths sub-section"
+    copilot_row = md_lines[start..].find { |l| l.start_with?("| Copilot |") }
+    refute_nil copilot_row, "the shipped PROJECT.md must keep its Copilot invocation row"
+    assert_includes copilot_row, "commit_id",
+                    "the shipped Copilot row must itself declare the artifact field its platform " \
+                    "attests the reviewed commit in (Codex review PR #153; ADR 0036 decision 5)"
+  end
+
   def test_real_project_md_actually_contains_the_section
     # THE PRECONDITION FOR EVERY DRIFT GUARD BELOW. `from_file` fail-safes to DEFAULTS when the
     # section is absent, so deleting the whole `## Reviewer` section - or merely renaming its heading

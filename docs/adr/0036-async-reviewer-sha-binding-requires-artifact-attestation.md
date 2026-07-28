@@ -82,8 +82,9 @@ back a request identity that could attribute exactly.
   `docs/standards/development-lifecycle.md`); `final`'s reviewed-SHA-equals-head hard gate is pinned;
   and the request-identity capture is pinned in `verify`.
 - **Hosts adding async rows get one instruction, not a rewrite:** name the artifact's
-  commit-attestation field in the row. The shipped Copilot row's field is named as guidance in
-  `PROJECT.md` only.
+  commit-attestation field in the row. The shipped Copilot row models it — its Summons cell names a
+  GitHub review's `commit_id` — and a row-anchored drift guard pins that declaration (Codex review,
+  PR #153).
 - **Known limit — attestation is read, not verified.** The procedure trusts the platform's artifact
   to name the commit truthfully; nothing machine-checks the artifact against the diff it reviewed.
   That sits on the same structural boundary as the relay convention

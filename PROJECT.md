@@ -192,7 +192,7 @@ every chain entry reads as unreachable and the parity check reddens.
 | Harness | Summons | Precondition | Check |
 |---------|---------|--------------|-------|
 | Codex | run the review synchronously through the local Codex CLI runtime against the checked-out PR head (the reviewed SHA binds by construction) | the Codex CLI runtime is installed and authenticated | the runtime's ready probe (side-effect-free; run before summoning) |
-| Copilot | request a PR review via the host platform's API | the account has Copilot code review enabled | *(host-supplied — none shipped)* |
+| Copilot | request a PR review via the host platform's API; the accepted review artifact attests the reviewed commit in the review's `commit_id` field | the account has Copilot code review enabled | *(host-supplied — none shipped)* |
 | *(host adds its own)* | — | — | — |
 
 **Both shipped mechanisms are still PR-gate-only** — the CLI runtime reviews the checked-out
@@ -202,9 +202,9 @@ open question ADR 0026 decision 2 records is *who* summons, and this table is wh
 alone would not be enough — the [#129](https://github.com/wrburgess/ace/issues/129) residual is
 unchanged. A host wanting a plan-gate review must add a mechanism that does not require a PR.
 
-A host adding an **asynchronous** row should name in that row the artifact field its platform records
-the reviewed commit in (e.g. a GitHub review's `commit_id` for the shipped Copilot row) — the concrete
-field name is host territory and never appears in a skill body.
+A host adding an **asynchronous** row must name in that row the artifact field its platform records
+the reviewed commit in, as the shipped Copilot row does with a GitHub review's `commit_id` — the
+concrete field name is host territory and never appears in a skill body.
 
 ## Human Gates
 
