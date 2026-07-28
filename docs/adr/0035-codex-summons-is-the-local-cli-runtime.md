@@ -21,7 +21,7 @@ shipped Reviewer declaration with how this repo's backstop review **actually run
 that failed silently in [#99](https://github.com/wrburgess/ai-config/issues/99) and that this repo
 does not use. The real route, HC-confirmed repeatedly in field use, is the **local Codex CLI
 runtime**: the review runs **synchronously against the checked-out PR head**, so the reviewed SHA
-binds by construction, and the runtime's setup/ready probe can run *before* summoning with no side
+binds by construction, and the runtime's ready probe can run *before* summoning with no side
 effect — the one thing ADR 0026 decision 4 wanted and ADR 0027 decision 4 recorded the baseline
 could not then deliver.
 
@@ -48,7 +48,7 @@ that a single retry resolves.
    ([ADR 0001](0001-distribute-as-copy-in-sync-script.md)), so no vendored host inherits this row.
 
 2. **The Check becomes the first genuinely executable one the baseline ships** — the runtime's
-   setup/ready probe, side-effect-free and run before summoning. The Check-cell **semantics are
+   ready probe, side-effect-free and run before summoning. The Check-cell **semantics are
    unchanged**: Declared → run it before summoning, unmet falls back immediately; Absent → the
    summons is the probe, with the `precondition unverified` qualifier riding on the terminal outcome.
    Only which branch the Codex row takes changes. The Copilot Check stays host-supplied, because that

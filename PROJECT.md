@@ -188,7 +188,7 @@ every chain entry reads as unreachable and the parity check reddens.
 
 | Harness | Summons | Precondition | Check |
 |---------|---------|--------------|-------|
-| Codex | run the review synchronously through the local Codex CLI runtime against the checked-out PR head (the reviewed SHA binds by construction) | the Codex CLI runtime is installed and authenticated | the runtime's setup/ready probe (side-effect-free; run before summoning) |
+| Codex | run the review synchronously through the local Codex CLI runtime against the checked-out PR head (the reviewed SHA binds by construction) | the Codex CLI runtime is installed and authenticated | the runtime's ready probe (side-effect-free; run before summoning) |
 | Copilot | request a PR review via the host platform's API | the account has Copilot code review enabled | *(host-supplied — none shipped)* |
 | *(host adds its own)* | — | — | — |
 
