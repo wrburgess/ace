@@ -21,3 +21,5 @@ file holds only Claude-specific configuration notes that have no place in the to
   delegation), Claude uses its native `Task` tool; tools without it run the same procedure inline. The
   quality bar never changes, only the mechanism
   ([ADR 0003](docs/adr/0003-skills-canonical-body-thin-shims-graceful-degradation.md)).
+- **Spawn cap** — never delegate review or verification ([ADR 0033](docs/adr/0033-verification-stays-in-main-agent-loop.md));
+  prefer one sub-agent to several; no wide parallel fan-out unless the HC asks for it.

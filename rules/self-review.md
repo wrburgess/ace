@@ -8,7 +8,6 @@
 ## Patterns
 
 - **Run the full quality gate green before saying "done".** All of the host's checks (declared in `PROJECT.md` → *Quality Checks*) must pass, not "probably pass."
-- **Re-read your own diff as a hostile reviewer would**, line by line, and fix what you would flag before anyone else sees it.
 - **Confirm every planned item has a corresponding test**, and that each test would actually fail if the feature broke.
 - **Enumerate every explicit ask from this session before declaring done** — each one is either delivered or handed to a tracked follow-up (trailing "also fold in X" asks included), and emit that **asks-ledger** (each ask → delivered / handed-off-to-#N) so a late ask is closed out, not silently dropped.
 - **Ground every "verified" / "as-of" / factual claim in a check that actually states it.** For a *documentation* claim, put it under the exact URL that supports it and quote the load-bearing line. For an *empirical* claim — a file's contents, a command's output, a running port, a DB row, a rendered screen — verify it against ground truth (open the file, run the command, probe the DB, take the screenshot) before asserting it. **If you cannot name the check that confirms it, you have not verified it.**

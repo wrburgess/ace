@@ -29,6 +29,12 @@ discarded, and **keeping judgment-heavy** work in a clean orchestrator — *not*
 phase uniformly. The cure for context degradation is to keep the *thinking* in a clean window and
 offload the *reading*. A dry run should complete without a mid-run compaction.
 
+**`verify` is the deliberate exception, and it costs.** Verification is kept in the main loop as a rule
+([ADR 0033](../../docs/adr/0033-verification-stays-in-main-agent-loop.md)), so the orchestrator reads
+the full PR diff — the largest single read in the lifecycle, and a real charge against the target above.
+It is accepted, not overlooked: the mitigation is the **pre-`verify` context reset** below, not a return
+to offloading. Do not "optimize" this row back.
+
 </what-to-do>
 
 <delegation-policy>
@@ -43,19 +49,23 @@ the decisions that matter are made on context the orchestrator actually saw.
 | `assess` exploration | **Delegate** | Assessment synthesis, option framing, the recommendation | `exploration-summary` ([`assess`](../../skills/assess/SKILL.md)) |
 | `devise` | **Keep** | Plan authoring + reconciliation against the codebase | — (judgment-heavy; no offload) |
 | `invoke` code + check + fix loop | **Delegate** | Branch setup, commit, push, open PR, issue linking | `check-result` ([`invoke`](../../skills/invoke/SKILL.md)) |
-| `verify` full-diff review | **Delegate** | Reading the report, classifying by severity, posting the self-review | `drift-report` ([`verify`](../../skills/verify/SKILL.md)) |
+| `verify` full-diff review | **Keep** | The whole diff read, the severity classification, the self-review | — (verification belongs in the main loop; no offload) |
 | `listen` fetch-and-fix churn | **Delegate** | Severity classification, the escalate-vs-resolve call, the autonomous disposition under `ship` (HC summary when standalone) | `review-response` (defined below) |
 | `final` merge-readiness | **Keep** | The green-gate + no-open-must-fix judgment; the SOW | — (judgment-heavy; no offload) |
 
 **Keep in the orchestrator (never delegate):** the resume derivation and the driving loop, assessment
-synthesis, plan authoring/reconciliation, `listen` severity + the escalate-vs-resolve (stop-and-ask)
-call, and the `final` merge-readiness call. These are the decisions a lossy summary would corrupt.
+synthesis, plan authoring/reconciliation, **the whole of `verify`**, `listen` severity + the
+escalate-vs-resolve (stop-and-ask) call, and the `final` merge-readiness call. These are the decisions a
+lossy summary would corrupt. `verify` is on this list for a distinct reason from the rest —
+**verification belongs in the main agent loop as a rule, not as a context-management preference**
+([ADR 0033](../../docs/adr/0033-verification-stays-in-main-agent-loop.md)) — and it is the one row that
+costs context rather than saving it (see *Design goal* above).
 
 ### review-response (sub-agent → orchestrator)
 
-The three delegated phases above consume contracts already defined in their own bodies
-(`exploration-summary`, `check-result`, `drift-report`). The `listen` fetch-and-fix churn is offloaded
-the same way but its contract is defined here, so every delegated phase has one:
+The two delegated phases above consume contracts already defined in their own bodies
+(`exploration-summary`, `check-result`). The `listen` fetch-and-fix churn is offloaded the same way but
+its contract is defined here, so every delegated phase has one:
 
 ```
 { threads: [ { id, surface: "issue_comment"|"inline_thread"|"review_body",
@@ -138,8 +148,10 @@ Then run the phases from the derived point:
    from the issue first** (unconditional): the orchestrator owns branch setup and
    all lifecycle-host I/O; the code + check + fix loop is delegated, returning a `check-result`.
    Reconcile git state, gate on `verdict`, then commit → push → open the PR.
-4. **Verify** — follow [`verify`](../../skills/verify/SKILL.md): delegate the full-diff review, consume
-   the `drift-report`, classify findings by severity, post the self-review on the PR.
+4. **Verify** — **reset context first** (see *Gates as context boundaries*), then follow
+   [`verify`](../../skills/verify/SKILL.md) **in the orchestrator** (no offload): read the full diff and
+   the plan from the PR and issue, produce the `drift-report`, classify findings by severity, post the
+   self-review on the PR.
 5. **Review response** — follow [`listen`](../../skills/listen/SKILL.md): delegate the fetch-and-fix churn
    (`review-response` contract), make the severity and escalate-vs-resolve calls in the orchestrator, and
    **dispose autonomously — post the disposition record and apply the resolvable findings, pausing to ask
@@ -257,8 +269,14 @@ git rather than carrying it in context — under either setting:
 - Run **assess + plan with a clean context**; "plan posted" is the boundary under `required` *and* under
   `auto` (a session end under `required`; `ship`'s own context reset under `auto`).
 - Cross into **build (`invoke` → `final`) with a fresh context** so the orchestrator starts lean before
-  the delegated code/verify/review churn. `invoke` opens by **re-reading the posted plan from the
+  the delegated code loop and the review churn. `invoke` opens by **re-reading the posted plan from the
   issue**, never from carried-over context.
+- A **pre-`verify` context reset** — also unconditional — because `verify` is kept in the main loop
+  ([ADR 0033](../../docs/adr/0033-verification-stays-in-main-agent-loop.md)) and reads the full diff
+  there. It is free: `verify` Steps 1–2 re-read the PR and the plan from durable artifacts anyway, so
+  nothing in-context is load-bearing across this boundary. This reset is the accepted mitigation for the
+  context cost that keeping `verify` in-loop imposes — it does not reduce the read, it just makes room
+  for it.
 - A **pre-`final` context check** forces another reset before the merge-readiness judgment — also
   unconditional.
 - **Record each explicit ask durably as it arrives**, never only in context — post it (or a tracked

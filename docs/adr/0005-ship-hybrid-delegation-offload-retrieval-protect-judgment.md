@@ -2,7 +2,9 @@
 
 > Note (#73): skill names below predate the six-skill rename (grill-with-docs→distill, cplan→devise, impl→invoke, rtr→listen, drop→clip, voice→follow). This ADR records the decision as of its date; the names here are historical.
 
-**Status:** accepted
+**Status:** accepted — *amended by [ADR 0033](0033-verification-stays-in-main-agent-loop.md): the
+`verify` full-diff review named in the Delegate bullet below is **no longer delegated**. The
+output-weight rule and the other three delegated phases stand.*
 
 `ship` is a phase-sequencing orchestrator whose goal is a lean main-thread context (no "dumb zone" degradation, no mid-run `/compact`). We reach that by delegating **output-heavy, signal-light** work to discardable sub-agents while **keeping judgment-heavy work in a clean orchestrator context** — *not* by delegating every phase uniformly.
 
