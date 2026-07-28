@@ -26,13 +26,20 @@ lifecycle, and ADR 0005's goal is an orchestrator that finishes a run without a 
 [`verify`](../../skills/verify/SKILL.md)'s own body carried the same offload as an option, so the path
 also existed for a standalone `/verify` invocation, independent of `ship`.
 
-Anthropic's Claude Opus 5 migration guidance points the other way, and unusually plainly. **Provenance:**
-read for the [#142](https://github.com/wrburgess/ai-config/issues/142) assessment via the bundled
-`claude-api` skill reference — a vendor-supplied document, not a public URL this ADR can link — and quoted
-by the HC when deciding the question:
+Anthropic's Claude Opus 5 migration guidance points the other way, and unusually plainly:
 
 > Do NOT use subagents for: … Review, verification, or to double check your work. **Verification belongs
 > in your main agent loop.**
+
+**Provenance, stated at its real strength.** That text was read for the
+[#142](https://github.com/wrburgess/ai-config/issues/142) assessment via the harness-bundled `claude-api`
+skill reference — a vendor-supplied document with no public URL, and **not retained in this repository**.
+A future reader therefore **cannot audit the quote from the bundle**, and should not treat it as a
+verifiable citation. What *is* durable and auditable is the decision it informed: the HC weighed this
+guidance and chose it explicitly, in a linkable comment on
+[#142](https://github.com/wrburgess/ai-config/issues/142#issuecomment-5105831496). **The binding
+authority for this ADR is that decision; the guidance is the input to it, recorded here for the reasoning
+rather than as proof.**
 
 The two positions are not reconcilable by scoping. The intent differs — context management, not a second
 opinion — but the *mechanism* is identical: the agent that classifies the findings never read the diff.
@@ -92,14 +99,22 @@ survey and answered by the HC on that issue.
   "complete without a mid-run compaction" target. The pre-`verify` reset makes room for the read; it does
   not shrink it. If compactions start appearing mid-run at this stage, that is data for a follow-up, not
   grounds to restore the offload.
-- **One fewer handoff contract crosses a sub-agent boundary**, so `ship` carries two delegated phases
-  (`assess` exploration, `invoke` code loop) plus `listen`'s churn, not three.
+- **One fewer handoff contract crosses a sub-agent boundary.** `ship` still delegates **three** phases —
+  `assess` exploration, the `invoke` code loop, and `listen`'s fetch-and-fix churn — but only **two** of
+  them now consume a contract defined in another skill's body (`exploration-summary`, `check-result`);
+  `listen`'s `review-response` is defined in `ship` itself, and `drift-report` is produced in-loop. The
+  count that changed is the contracts crossing a boundary, not the delegated phases.
 - **The Claude adapter gains a matching spawn cap** in [`CLAUDE.md`](../../CLAUDE.md) — never delegate
   review or verification, prefer one sub-agent to several, no wide fan-out unasked. Adapter-only by
   classification: a spawn cap is a harness-capability statement, and it composes with the one-level
   nesting ceiling recorded in ADR 0026 (a sub-agent cannot spawn sub-agents) — that bounds the *depth*,
   this bounds the *breadth*.
-- **Known limit — unmeasured.** This is instruction text with no test. Parity proves the bundle is
-  well-formed and that the flip is consistent across the files that restate it; it cannot prove the
-  posture produces better reviews. The evidence is first-party guidance plus the argument above, not a
-  measurement — stated here rather than implied.
+- **Known limit — unmeasured, and unverifiable by the checker.** This is instruction text with no test.
+  Parity proves the bundle is **well-formed** — links resolve, ADR numbering is contiguous, required
+  sections are **present**. It proves nothing about whether this flip is stated *consistently* across the
+  files that restate it: the Tier-1 rule check asserts section presence, **not content**
+  (`scripts/parity_check.rb`), and this ADR's only mechanical guarantee is that it appears in the
+  link-checked manifest. That consistency rests on the implementing PR's manual sweep and on human
+  review — the [ADR 0008](0008-structural-parity-check-not-model-in-the-loop.md) boundary, not a gap in
+  it. Nor can any of it prove the posture produces *better* reviews; the evidence is the guidance below
+  plus the argument above, not a measurement.
