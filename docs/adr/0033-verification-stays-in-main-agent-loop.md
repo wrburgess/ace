@@ -26,7 +26,10 @@ lifecycle, and ADR 0005's goal is an orchestrator that finishes a run without a 
 [`verify`](../../skills/verify/SKILL.md)'s own body carried the same offload as an option, so the path
 also existed for a standalone `/verify` invocation, independent of `ship`.
 
-Anthropic's Opus 5 migration guidance points the other way, and unusually plainly:
+Anthropic's Claude Opus 5 migration guidance points the other way, and unusually plainly. **Provenance:**
+read for the [#142](https://github.com/wrburgess/ai-config/issues/142) assessment via the bundled
+`claude-api` skill reference — a vendor-supplied document, not a public URL this ADR can link — and quoted
+by the HC when deciding the question:
 
 > Do NOT use subagents for: … Review, verification, or to double check your work. **Verification belongs
 > in your main agent loop.**

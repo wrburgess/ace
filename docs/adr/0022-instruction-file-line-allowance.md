@@ -6,9 +6,12 @@
 > has not. Two grounds carry it now, and both are stronger than the original: (1) **attention, not
 > capacity** — a long always-resident instruction file degrades instruction-*following* quality well
 > before it strains a window, which is the concern Gemini publishes and the one that actually bites; and
-> (2) **Copilot still does not follow links**, so relocating a load-bearing instruction behind a pointer
-> remains lossy no matter whose window grew. Do not relax the allowance because the context window got
-> bigger — that reasoning was never the load-bearing one.
+> (2) **the link-following constraint below is orthogonal to window size** — a load-bearing instruction
+> relocated behind a pointer is lost to a tool that does not follow links, however large that tool's
+> window becomes, so nothing about a bigger window revisits it. (That constraint is the one sourced
+> below as of 2026-07-09 and is **not** re-verified here — this amendment revises the *rationale*, not
+> the facts.) Do not relax the allowance because the context window got bigger — that reasoning was
+> never the load-bearing one.
 
 The always-loaded instruction files carry a **recurring, four-way context cost** — `AGENTS.md` is read
 every session by all four tools (natively by Codex/Copilot, via `@AGENTS.md` import-expansion by
