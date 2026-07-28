@@ -1,4 +1,18 @@
-# ai-config
+```text
+       01
+      0000
+     010100
+    00110100
+  010100100000
+ 01001111010001
+1000100000010100
+110101 00 000100
+ 0001 0100 0100
+     010001
+    01010100
+```
+
+# ace
 
 A generic, model-agnostic **AI-agent configuration layer** for software projects — vendor it into a
 project, edit one file, and every AI coding assistant follows the same reviewable playbook.
