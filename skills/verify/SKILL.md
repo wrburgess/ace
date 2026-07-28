@@ -188,8 +188,11 @@ After posting the self-review, take each chain entry in order:
    mechanism:**
    - **Synchronous** reviewer that reviews the **checked-out PR head** (the baseline Codex row: the
      local Codex CLI runtime) → the summon-captured SHA **is** the reviewed SHA, bound by
-     construction. A first invocation that returns **empty output while the ready probe passes** is a
-     known runtime flake: **retry once** before recording any outcome.
+     construction — but the construction only binds if the reviewer actually ran on that commit:
+     **before invoking, confirm the local `HEAD` equals the summon-captured PR head** (check out that
+     SHA if the remote advanced or the checkout is stale), or the relay would certify a commit the
+     reviewer never saw. A first invocation that returns **empty output while the ready probe
+     passes** is a known runtime flake: **retry once** before recording any outcome.
    - **Asynchronous** reviewer that fetches the PR later (a platform review) → the head may advance
      before it fetches, so the summon-captured SHA is only a *lower bound*. Take the reviewed SHA from the
      **review artifact itself** (the commit the platform records the review against); if the artifact pins
