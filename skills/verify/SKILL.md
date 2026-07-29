@@ -184,8 +184,9 @@ After posting the self-review, take each chain entry in order:
    `unreachable`.
 4. **Snapshot, then summon.** Before issuing the summons capture the **current PR head SHA** and a
    **baseline of the review threads/comments that already exist** on the PR; then summon via the declared
-   mechanism and wait up to the **bounded window**. **How the reviewed SHA binds depends on the
-   mechanism:**
+   mechanism, recording the **request identity** the mechanism returns for the created review request
+   when it returns one, and wait up to the **bounded window**. **How the reviewed SHA binds depends
+   on the mechanism:**
    - **Synchronous** reviewer that reviews the **checked-out PR head** (the baseline Codex row: the
      local Codex CLI runtime) → the summon-captured SHA **is** the reviewed SHA, bound by
      construction — but the construction only binds if the reviewer actually ran on that commit:
@@ -194,10 +195,14 @@ After posting the self-review, take each chain entry in order:
      reviewer never saw. A first invocation that returns **empty output while the ready probe
      passes** is a known runtime flake: **retry once** before recording any outcome.
    - **Asynchronous** reviewer that fetches the PR later (a platform review) → the head may advance
-     before it fetches, so the summon-captured SHA is only a *lower bound*. Take the reviewed SHA from the
-     **review artifact itself** (the commit the platform records the review against); if the artifact pins
-     no commit, the review is **unverified → apply the floor (step 7)**, never assumed to cover the
-     summon-time head.
+     before it fetches, so the summon-captured SHA is only a *lower bound*. Accept the response only
+     when the review artifact **explicitly attests the reviewed commit** it covers; that
+     artifact-attested commit **is** the reviewed SHA. An artifact that attests no commit — including
+     a platform that cannot attest one — is **unverified → apply the floor (step 7)**, never assumed
+     to cover the summon-time head. And an attested SHA that differs from the current PR head at
+     acceptance means the response covered a **stale** commit: re-summon on the current head (the
+     same re-enter-the-chain move [`final`](../../skills/final/SKILL.md)'s gate forces at delivery),
+     never carry a known-stale reviewed SHA forward as if it covered the head.
 
    Record the reviewed SHA now, carry it forward unchanged, and **never re-derive it at delivery**; the
    baseline lets step 5 tell *this* summons's response from an earlier round's. Together these let
@@ -206,7 +211,9 @@ After posting the self-review, take each chain entry in order:
 5. **A response is a reply on _any_ of the three surfaces** — an issue-level PR comment, an **inline
    diff thread**, or a **review body** — and only one that is **new since the summon snapshot (step 4)**:
    a pre-existing reply from an earlier round is **not** *this* summons's response and must never be
-   counted as one. Poll all three surfaces (reading only issue-level comments makes an automated inline
+   counted as one. Attribute a new reply to *this* summons by the recorded **request identity** when
+   the mechanism returned one (step 4); new-since-snapshot is the remaining basis when it did not.
+   Poll all three surfaces (reading only issue-level comments makes an automated inline
    review invisible — the trap [`listen`](../../skills/listen/SKILL.md) Step 1 warns about). A
    **synchronous CLI reviewer's response arrives as returned output**, not on the PR — so the summoner
    **posts it onto a PR surface**: an issue-level PR comment carrying the reviewer's harness/model, the
@@ -214,8 +221,8 @@ After posting the self-review, take each chain entry in order:
    [`listen`](../../skills/listen/SKILL.md)'s fetch, and the durable evidence record below holding
    unchanged. For a synchronous reviewer running on the checked-out PR head that relayed reply
    inherently reviewed the summon-captured SHA; for an asynchronous platform reviewer, attribute the new
-   reply to this summons **and take its reviewed SHA from the artifact, not the summon-time head**
-   (step 4). **A summons that merely returned success is not itself a
+   reply to this summons **and take its reviewed SHA from the artifact-attested commit, never the
+   summon-time head** (step 4). **A summons that merely returned success is not itself a
    response.** Keep the timeout/unreachable distinction intact by separating two failure modes: a summons
    that created **no review request at all** (the API "succeeded" but produced nothing to wait for, or a
    precondition was unmet) is a **no-op → `unreachable`**, fall back immediately; a request **created but
@@ -232,9 +239,10 @@ exists" and "the second model is slow" call for different HC responses, and the 
 reconstruct the difference later. `precondition unverified` is a **qualifier** riding on whichever of
 those two applies when no Check ran — it says nothing confirmed the summons could land, and attaches to
 `unreachable` (no request created) or `timed-out` (created but silent) accordingly. Record the **durable
-review evidence** — the reviewer's **harness/model**, the **reviewed SHA** (the summon-time head from
-step 4), the **disposition** (responded · timed-out · unreachable · floor-hit, and why), and the review
-**artifact URL** — so
+review evidence** — the reviewer's **harness/model**, the **reviewed SHA** (bound in step 4 — the
+summon-captured head for a synchronous reviewer, the artifact-attested commit for an asynchronous
+one), the **request identity** (when one existed), the **disposition** (responded · timed-out ·
+unreachable · floor-hit, and why), and the review **artifact URL** — so
 [`final`](../../skills/final/SKILL.md) reports it in the SOW from a durable record, never inferring a
 review happened because findings exist.
 

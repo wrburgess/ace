@@ -36,7 +36,10 @@ over time is which gates require external review vs. self-review; what changes a
   ([ADR 0027](../adr/0027-reviewer-chain-validated-against-invocation-paths.md), narrowly superseding
   ADR 0026 decision 4). If the whole chain is exhausted, the gate **degrades to "stop and ask the
   HC"** — `stop-and-ask` is the floor's only allowed value, it is never silently dropped, and a run
-  may not certify itself by delivering unreviewed.
+  may not certify itself by delivering unreviewed. An accepted response **binds to a specific
+  commit** — the summon-captured head for a synchronous mechanism; for an asynchronous one,
+  acceptance requires a review artifact that explicitly attests the reviewed commit it covers — and
+  [`final`](../../skills/final/SKILL.md) gates on that reviewed SHA equalling the delivered PR head.
 
   **At the plan gate the HC forwards** the assessment and plan (Stages 1–2 below) **when plan approval
   is `required`** — a human is already at that gate. Under the shipped baseline `auto` nobody is there,

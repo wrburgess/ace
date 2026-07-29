@@ -1667,6 +1667,14 @@ class ReviewerTest < Minitest::Test
     File.join(File.expand_path("..", __dir__), "skills", "verify", "SKILL.md")
   end
 
+  def final_skill_path
+    File.join(File.expand_path("..", __dir__), "skills", "final", "SKILL.md")
+  end
+
+  def lifecycle_doc_path
+    File.join(File.expand_path("..", __dir__), "docs", "standards", "development-lifecycle.md")
+  end
+
   def test_absent_check_qualifier_contract_agrees_across_project_md_and_verify
     # DRIFT GUARD (Codex review, PR #140). The absent-Check classification lives in TWO governing
     # contracts — PROJECT.md -> Reviewer and skills/verify -> Summon — and they must not disagree about
@@ -1695,6 +1703,71 @@ class ReviewerTest < Minitest::Test
     assert_includes File.read(verify_skill_path), phrase,
                     "skills/verify must name the same checked-out-PR-head route, or the two " \
                     "contracts drift"
+  end
+
+  def test_async_attestation_contract_agrees_across_all_four_governing_files
+    # DRIFT GUARD (issue #141), same shape as the two pins above but four-wide. The asynchronous
+    # acceptance rule — a response counts only when its review artifact explicitly attests the
+    # commit it covers — lives in FOUR governing files: PROJECT.md -> Reviewer (the response
+    # definition), skills/verify -> Summon step 4 (acceptance), skills/final step 4 (the delivery
+    # recheck), and the lifecycle standard's Roles section (the restatement). The pre-#141 wording
+    # ("take the reviewed SHA from the artifact") read as a lookup rather than an acceptance
+    # condition, so an unattested artifact failed OPEN to the summon-time head. Pin the attestation
+    # phrase in all four so a one-sided softening reddens instead of silently reopening that hole
+    # (ADR 0036).
+    phrase = "attests the reviewed commit"
+    { "PROJECT.md"                              => project_md_path,
+      "skills/verify/SKILL.md"                  => verify_skill_path,
+      "skills/final/SKILL.md"                   => final_skill_path,
+      "docs/standards/development-lifecycle.md" => lifecycle_doc_path }.each do |name, path|
+      assert_includes File.read(path), phrase,
+                      "#{name} must carry the async artifact-attestation rule verbatim, or the " \
+                      "four governing contracts drift (ADR 0036)"
+    end
+  end
+
+  def test_final_pins_the_reviewed_sha_equals_head_hard_gate
+    # DRIFT GUARD (PR #140's gate, first pinned here with issue #141). skills/final step 4 is the
+    # delivery end of the SHA chain: the reviewed SHA bound by verify must equal the PR head the HC
+    # merges, or the delivered diff is unreviewed. Nothing machine-reads that prose, so pin the hard
+    # gate's literal — a rewording that softens "must equal ... at delivery" into a note is exactly
+    # the regression this guard exists to redden.
+    gate = "reviewed SHA must equal the PR head at delivery"
+    assert_includes File.read(final_skill_path), gate,
+                    "skills/final must keep the reviewed-SHA-equals-head hard gate verbatim " \
+                    "(PR #140; ADR 0036 decision 2)"
+  end
+
+  def test_verify_pins_the_request_identity_capture
+    # DRIFT GUARD (issue #141 / ADR 0036 decision 4). verify's summon snapshot records the request
+    # identity the mechanism returns for the created review request, so a response is attributed to
+    # THIS summons by identity when one exists and only temporally (new-since-snapshot) when none
+    # does. Verify-only on purpose: PROJECT.md's response bullet does not carry the capture step, so
+    # this pins the one file that does.
+    phrase = "request identity"
+    assert_includes File.read(verify_skill_path), phrase,
+                    "skills/verify must record the summons's request identity for response " \
+                    "attribution (ADR 0036 decision 4)"
+  end
+
+  def test_real_project_md_copilot_row_declares_its_attestation_field
+    # DRIFT GUARD (Codex review, PR #153). The guidance below the Invocation-paths table tells a host
+    # to name the artifact's commit-attestation field IN THE ROW, and the shipped Copilot row is the
+    # baseline's one asynchronous row — so it must model that declaration itself. As first authored,
+    # only the surrounding prose named `commit_id` while the row said nothing, leaving a host copying
+    # the baseline with no row-level declaration to implement the fail-closed attestation rule against
+    # (ADR 0036 decision 5). Row-anchored on purpose: a file-wide include would pass on the prose
+    # mention alone, which is exactly the inconsistency this guard exists to redden. Anchored BELOW
+    # the `### Invocation paths` heading, because the Attribution table's Copilot row matches the
+    # same `| Copilot |` prefix earlier in the file.
+    md_lines = File.read(project_md_path).lines
+    start = md_lines.index { |l| l.start_with?("### Invocation paths") }
+    refute_nil start, "the shipped PROJECT.md must keep its Invocation paths sub-section"
+    copilot_row = md_lines[start..].find { |l| l.start_with?("| Copilot |") }
+    refute_nil copilot_row, "the shipped PROJECT.md must keep its Copilot invocation row"
+    assert_includes copilot_row, "commit_id",
+                    "the shipped Copilot row must itself declare the artifact field its platform " \
+                    "attests the reviewed commit in (Codex review PR #153; ADR 0036 decision 5)"
   end
 
   def test_real_project_md_actually_contains_the_section

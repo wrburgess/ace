@@ -147,7 +147,10 @@ and stays green.
   three surfaces is. A summons that created **no review request** (the API "succeeded" but produced
   nothing to wait for) is a no-op → `unreachable`; a request that was created but has **not replied yet**
   is polled to the bounded-window expiry and recorded as `timed-out` if it stays silent — the two remain
-  distinct. *Request accepted ≠ review produced.*
+  distinct. *Request accepted ≠ review produced.* For an **asynchronous** mechanism a response is
+  accepted only when its review artifact **explicitly attests the reviewed commit** it covers; an
+  artifact that attests none is unverified → the degradation floor, never assumed to cover the
+  summon-time head.
 - **Timeout and unreachable are distinct outcomes**, carried forward separately: "no second model
   exists" and "the second model is slow" call for different HC responses, and collapsing them loses
   information the SOW cannot reconstruct.
@@ -189,7 +192,7 @@ every chain entry reads as unreachable and the parity check reddens.
 | Harness | Summons | Precondition | Check |
 |---------|---------|--------------|-------|
 | Codex | run the review synchronously through the local Codex CLI runtime against the checked-out PR head (the reviewed SHA binds by construction) | the Codex CLI runtime is installed and authenticated | the runtime's ready probe (side-effect-free; run before summoning) |
-| Copilot | request a PR review via the host platform's API | the account has Copilot code review enabled | *(host-supplied — none shipped)* |
+| Copilot | request a PR review via the host platform's API; the accepted review artifact attests the reviewed commit in the review's `commit_id` field | the account has Copilot code review enabled | *(host-supplied — none shipped)* |
 | *(host adds its own)* | — | — | — |
 
 **Both shipped mechanisms are still PR-gate-only** — the CLI runtime reviews the checked-out
@@ -198,6 +201,10 @@ API". At the **plan** gate there is therefore **no summons mechanism at all**, w
 open question ADR 0026 decision 2 records is *who* summons, and this table is why answering that
 alone would not be enough — the [#129](https://github.com/wrburgess/ace/issues/129) residual is
 unchanged. A host wanting a plan-gate review must add a mechanism that does not require a PR.
+
+A host adding an **asynchronous** row must name in that row the artifact field its platform records
+the reviewed commit in, as the shipped Copilot row does with a GitHub review's `commit_id` — the
+concrete field name is host territory and never appears in a skill body.
 
 ## Human Gates
 
