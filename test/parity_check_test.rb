@@ -1704,7 +1704,7 @@ class ParityCheckTest < Minitest::Test
       | Gate | Setting | Allowed values |
       |------|---------|----------------|
       | **Plan approval** — the option pick and the plan | `#{plan}` | `required` · `auto` |
-      | **Merge** — the HC merges the delivered PR | `#{merge}` | `required` (not configurable) |
+      | **Merge** — who merges the delivered PR | `#{merge}` | `required` · `attested` |
     MD
   end
 
@@ -1728,16 +1728,39 @@ class ParityCheckTest < Minitest::Test
     end
   end
 
-  def test_auto_merge_gate_fails_as_non_configurable
-    # The safety invariant: no Host App may express self-merge. This must fail with its OWN message
-    # naming merge as non-configurable, not the generic bad-value message — it is a policy boundary.
+  def test_auto_merge_gate_fails_as_unconditional_self_merge
+    # The safety invariant ADR 0025 set and ADR 0037 preserved. The two values are not interchangeable:
+    # `attested` is merge on EVIDENCE and is legal; `auto` is a claim of UNCONDITIONAL self-merge and is
+    # not. It must fail with its OWN policy-boundary message naming that claim — never the generic
+    # bad-value message, which would read as "you typed it wrong" rather than "you asked for that".
     with_bundle do |dir|
       add_human_gates(dir, merge: "auto")
       code, out = run_check(dir)
       assert_equal 1, code
-      assert_match(/merge gate is NOT configurable/, out)
-      assert_match(/no Host App may express self-merge/, out)
+      assert_match(/no Host App may express UNCONDITIONAL self-merge/, out)
+      assert_match(/use `attested`/, out, "the boundary message must name the legal alternative")
+      refute_match(/unknown value/, out, "a deliberate policy claim was reported as a typo")
     end
+  end
+
+  def test_attested_merge_gate_passes
+    # ADR 0037 decision 1: `attested` is legal — the AC merges only against an external-model adversarial
+    # review bound to the merged SHA. It must pass cleanly and must never be reported as a self-merge
+    # claim; that conflation is the whole distinction this ADR turns on.
+    with_bundle do |dir|
+      add_human_gates(dir, merge: "attested")
+      code, out = run_check(dir)
+      assert_equal 0, code, out
+      refute_match(/self-merge/, out)
+    end
+  end
+
+  def test_merge_gate_default_stays_required_when_section_absent
+    # ADR 0037 decision 1: autonomy is opt-in and never inherited. A vendored PROJECT.md that predates
+    # this ADR must still parse to `required` — adding a second legal value must not shift the default
+    # for every already-vendored host that never asked for it.
+    assert_equal "required", HumanGates::DEFAULTS[:merge]
+    assert_equal({}, HumanGates.invalid(HumanGates::DEFAULTS))
   end
 
   def test_case_variant_merge_value_fails_as_a_typo_not_as_self_merge
@@ -1753,6 +1776,41 @@ class ParityCheckTest < Minitest::Test
       assert_match(/allowed values are `required`/, out)
       refute_match(/self-merge/, out, "a capitalization typo was reported as a self-merge claim")
       refute_match(/NOT configurable/, out)
+    end
+  end
+
+  def test_unenforced_heading_in_project_config_fails
+    # ADR 0037 decision 5. This is the ratchet for the failure that produced this ADR: a rule announced
+    # in PROJECT.md prose and enforced nowhere reads as binding to every agent, is invisible to this
+    # checker, and stays green while practice and config diverge — ten PRs, in the real case. The escape
+    # hatch is therefore the error, precisely BECAUSE an honest author labelled it accurately.
+    with_bundle do |dir|
+      project = File.read(File.join(dir, "PROJECT.md"))
+      File.write(File.join(dir, "PROJECT.md"), <<~MD)
+        #{project}
+        ### host merge-autonomy intent (recorded, not machine-enforced)
+
+        The AC merges after green checks. This paragraph records that intent; it does not change the
+        table above.
+      MD
+      code, out = run_check(dir)
+      assert_equal 1, code
+      assert_match(/declares a rule it cannot enforce/, out)
+    end
+  end
+
+  def test_unenforced_wording_in_body_text_does_not_fail
+    # Scoped to HEADINGS on purpose. Prose may legitimately discuss what is and is not machine-enforced
+    # — this very repo's ADRs do — and failing on body text would make the ratchet unusable and get it
+    # disabled. Only a heading markets a section as authoritative.
+    with_bundle do |dir|
+      project = File.read(File.join(dir, "PROJECT.md"))
+      File.write(File.join(dir, "PROJECT.md"), <<~MD)
+        #{project}
+        The reviewer chain is machine-enforced; the naming convention below is not machine-enforced.
+      MD
+      code, out = run_check(dir)
+      assert_equal 0, code, out
     end
   end
 
