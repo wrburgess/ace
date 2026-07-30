@@ -138,6 +138,7 @@ class ParityCheck
     "docs/adr/0036-async-reviewer-sha-binding-requires-artifact-attestation.md",
     # Standards
     "docs/standards/development-lifecycle.md",
+    "docs/standards/software-development-system.md",
     # Out-of-band research (the per-tool discovery re-verification AGENTS.md cites) and Stack Overlays
     "docs/research/tool-config-discovery.md",
     "docs/overlays/ace-rails.md",
