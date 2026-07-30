@@ -214,15 +214,17 @@ of hardcoding a policy a host would otherwise have to fork the file to change
 the host-platform value in [ADR 0006](docs/adr/0006-baseline-skill-set-and-github-default-lifecycle-host.md)).
 The Generic Baseline now ships **ungated to merge**: plan approval is `auto`, so a hands-off run drives
 itself to the one standing human gate, and every Skill body states that default inline
-([ADR 0029](docs/adr/0029-baseline-ships-ungated-to-merge.md)). **Merge stays `required` and is never
-configurable** — it is the sole human gate. (A vendored `PROJECT.md` that predates this section still
-parses to the strict fail-safe — plan approval `required` — through the parser default; the flip lives
-in the shipped file, not in that default.)
+([ADR 0029](docs/adr/0029-baseline-ships-ungated-to-merge.md)). **Merge ships `required`** — the one
+standing human gate — but a host may set it to **`attested`**, which lets the AC merge *only* once an
+independent external-model adversarial review is on record and bound to the SHA being merged
+([ADR 0037](docs/adr/0037-merge-gate-accepts-attested.md)). (A vendored `PROJECT.md` that predates this
+section still parses to the strict fail-safe — plan approval `required`, merge `required` — through the
+parser default; the flip lives in the shipped file, not in that default.)
 
 | Gate | Setting | Allowed values |
 |------|---------|----------------|
 | **Plan approval** — covers both the Stage-1 option pick and the Stage-2 plan approval | `auto` | `required` · `auto` |
-| **Merge** — the HC merges the delivered PR | `required` | `required` (not configurable) |
+| **Merge** — who merges the delivered PR | `required` | `required` · `attested` |
 
 - **`auto`** (shipped default) — the AC proceeds on **its own stated recommendation** rather than
   waiting. It still **posts** the assessment and the plan to the lifecycle host — under `auto` those
@@ -233,12 +235,25 @@ in the shipped file, not in that default.)
 - **`required`** — a host may set the **plan-approval** row (and only that row) back to `required`. The
   AC then stops and waits for the HC: it does not proceed past the assessment without a chosen option,
   and it does not write code without an approved plan.
-- **Merge is not configurable.** `required` is the only allowed value: **no Host App may express
-  self-merge.** The parity check hard-fails any other value. `final` posts the SOW; a human merges.
+- **Merge — `required` (shipped) or `attested`.** Under `required`, `final` posts the SOW and a human
+  merges. Under `attested`, `final` posts the SOW and then **may merge itself, but only on evidence**:
+  an independent external-model adversarial review must be on record and **bound to the exact SHA being
+  merged**. No attestation, or an attestation naming a different SHA, means no merge — `final` stops and
+  says so. **`auto` remains forbidden** and the parity check hard-fails it with its own message:
+  unconditional self-merge is the claim ADR 0025 refused, and `attested` is not that claim. What makes
+  the difference real rather than semantic is *§ Reviewer*, which already filters the acting harness out
+  of its own review chain and forces `stop-and-ask` when no independent review can be obtained — so an
+  AC under `attested` still cannot certify its own work ([ADR 0037](docs/adr/0037-merge-gate-accepts-attested.md)).
+- **`attested` does not reach the intake and authoring PRs.** `scout` / `clip` / `follow` / `restock` /
+  `create-skill` still end with **a human disposing on the PR** ([ADR 0025](docs/adr/0025-human-gate-policy-is-a-project-config-value.md)
+  decision 6, unchanged). Those gates exist for *content judgment*, not code correctness, and an
+  adversarial code review is not evidence about either.
 
 **Unconditional, whatever this section says:**
 
-- **Merge is always human** (above).
+- **Merge is never unconditional** (above). Under `required` a human merges; under `attested` the AC
+  merges only against a SHA-bound external review. There is no setting under which a PR merges on the
+  AC's own say-so.
 - **The plan gate is also a context boundary, and the reset survives the pause being waived.**
   "Plan posted" forces a context reset under either setting — a session boundary under `required` (the
   human crosses), `ship`'s own context reset under `auto`
