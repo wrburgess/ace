@@ -139,6 +139,7 @@ class ParityCheck
     "docs/adr/0037-merge-gate-accepts-attested.md",
     # Standards
     "docs/standards/development-lifecycle.md",
+    "docs/standards/software-development-system.md",
     # Out-of-band research (the per-tool discovery re-verification AGENTS.md cites) and Stack Overlays
     "docs/research/tool-config-discovery.md",
     "docs/overlays/ace-rails.md",
