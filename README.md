@@ -1,5 +1,12 @@
 # ace
 
+> [!IMPORTANT]
+> **ace is frozen (2026-08-01).** Development continues in
+> [deuce](https://github.com/wrburgess/deuce), its successor — see the
+> [reboot charter](docs/superpowers/specs/2026-08-01-deuce-reboot-design.md).
+> Only critical host-breaking fixes land here, labeled `must-port`.
+> Hosts remain on ace until the deuce cutover (charter §11).
+
 A generic, model-agnostic **AI-agent configuration layer** for software projects — vendor it into a
 project, edit one file, and every AI coding assistant follows the same reviewable playbook.
 
